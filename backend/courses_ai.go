@@ -13,9 +13,9 @@ func (a *API) examSettings() AgentSettings {
 	if a.Agent != nil {
 		return *a.Agent
 	}
-	c := AgentSettings{Provider: env("EXAM_AI_PROVIDER", "ollama"), Model: env("OLLAMA_MODEL", "qwen3:4b"), URL: env("OLLAMA_URL", "http://127.0.0.1:11434/api/chat")}
+	c := AgentSettings{Provider: env("EXAM_AI_PROVIDER", "gemini"), Model: env("OLLAMA_MODEL", "qwen3:4b"), URL: env("OLLAMA_URL", "http://127.0.0.1:11434/api/chat")}
 	if c.Provider == "gemini" {
-		c.Model = env("EXAM_GEMINI_MODEL", "gemini-3.8-flash")
+		c.Model = env("EXAM_GEMINI_MODEL", geminiModel)
 		c.URL = "https://generativelanguage.googleapis.com/v1beta/models/" + c.Model + ":generateContent"
 	}
 	return c

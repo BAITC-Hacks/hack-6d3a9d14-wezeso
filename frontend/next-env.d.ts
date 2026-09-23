@@ -1,7 +1,7 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-import "./.next-agent-build/types/routes.d.ts";
-import "./.next-agent-build/types/root-params.d.ts";
+import "./.next-i18n-build/types/routes.d.ts";
+import "./.next-i18n-build/types/root-params.d.ts";
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.

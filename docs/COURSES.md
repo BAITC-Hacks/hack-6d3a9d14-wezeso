@@ -48,7 +48,7 @@ node scripts/course-sql.mjs
 
 ## AI configuration
 
-Local Ollama (default, no external transfer):
+Gemini 3.8 Flash is the default exam model. Local Ollama remains an explicit option with no external transfer:
 
 ```dotenv
 EXAM_AI_PROVIDER=ollama
@@ -58,7 +58,7 @@ OLLAMA_MODEL=qwen3:4b
 
 Run Ollama and install the selected model, for example `ollama pull qwen3:4b`. The endpoint must be loopback and the model cannot be a cloud model. A configured endpoint does not imply that a model is running. The grading deadline is 55 seconds; model size and hardware affect whether it can finish in time.
 
-Alternatively, for material allowed to leave the local environment:
+For the approved Gemini setup (default):
 
 ```dotenv
 EXAM_AI_PROVIDER=gemini

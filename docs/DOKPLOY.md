@@ -48,14 +48,14 @@ Add:
 ```dotenv
 STORAGE_BACKEND=csv
 DATA_DIR=/app/data
-DEMO_PASSWORD=REPLACE_WITH_A_LONG_RANDOM_PASSWORD
+DEMO_PASSWORD=12345678
 ```
 
-Before deploying, add a **Volume Mount** under **Advanced → Volumes/Mounts** with volume name `career-quest-data` and mount path `/app/data`. A fresh Docker volume inherits the image directory's ownership (Node UID 1000). An existing volume or bind mount must be writable by UID 1000.
+Before deploying, add a **Volume Mount** under **Advanced в†’ Volumes/Mounts** with volume name `career-quest-data` and mount path `/app/data`. A fresh Docker volume inherits the image directory's ownership (Node UID 1000). An existing volume or bind mount must be writable by UID 1000.
 
 Keep **Replicas = 1**, and set both update and rollback **Order = stop-first** so two containers never write the same CSV store. On a multi-node Swarm, pin the app to the node holding its local data volume. Expect brief downtime during deployments. Back up the volume.
 
-The first startup seeds the supplied original dataset. Logins are `employee`, `manager`, `hr`, and `colleague`, all using your chosen `DEMO_PASSWORD`. This starts fresh; it does not include your laptop's saved changes. Changing `DEMO_PASSWORD` after initialization does not reset existing accounts. If you leave it unset, retrieve the generated password from `/app/data/demo-accounts.txt` using Dokploy's container terminal.
+The first startup seeds the supplied original dataset. Logins are `employee`, `manager`, `hr`, and `colleague`, all using your chosen `DEMO_PASSWORD`. This starts fresh; it does not include your laptop's saved changes. Every startup synchronizes all account passwords to `DEMO_PASSWORD`, defaulting to `12345678`.
 
 ## AI configuration
 

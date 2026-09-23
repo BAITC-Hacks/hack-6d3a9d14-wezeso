@@ -56,7 +56,7 @@ func openStore() (*Store, func(), error) {
 			return nil, nil, errors.New("Supabase has no app accounts; import the complete state.csv export")
 		}
 		st := &Store{DB: db, State: state}
-		if err := st.transact(func(s *State) error { ensureCourses(s); return nil }); err != nil {
+		if err := st.transact(func(s *State) error { ensureCourses(s); return syncDemoPasswords(s) }); err != nil {
 			db.Close()
 			return nil, nil, err
 		}
@@ -89,6 +89,10 @@ func openStore() (*Store, func(), error) {
 		return nil, nil, err
 	}
 	ensureCourses(&state)
+	if err := syncDemoPasswords(&state); err != nil {
+		cleanup()
+		return nil, nil, err
+	}
 	if err := writeRows(filepath.Join(dir, "state.csv"), state); err != nil {
 		cleanup()
 		return nil, nil, err
@@ -104,10 +108,7 @@ func initialState(dir string) (State, error) {
 	if err = os.MkdirAll(dir, 0700); err != nil {
 		return s, err
 	}
-	pass := os.Getenv("DEMO_PASSWORD")
-	if pass == "" {
-		pass = "Quest-" + uid("")[:18]
-	}
+	pass := env("DEMO_PASSWORD", "12345678")
 	hash, err := hashPassword(pass)
 	if err != nil {
 		return s, err
@@ -124,4 +125,20 @@ func initialState(dir string) (State, error) {
 		return s, err
 	}
 	return s, closeErr
+}
+
+// Keep every account in the hackathon demo on the documented shared password.
+func syncDemoPasswords(s *State) error {
+	password := env("DEMO_PASSWORD", "12345678")
+	for i := range s.Users {
+		if checkPassword(password, s.Users[i].Hash) {
+			continue
+		}
+		hash, err := hashPassword(password)
+		if err != nil {
+			return err
+		}
+		s.Users[i].Hash = hash
+	}
+	return nil
 }

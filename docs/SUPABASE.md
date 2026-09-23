@@ -39,7 +39,7 @@ npm run db:export -- --from-dataset
 Remove-Item Env:DATA_DIR
 ```
 
-This initializes the original dataset and creates `data/bootstrap/state.csv`, `demo-accounts.txt` and `supabase-migration.sql`. Accounts are `employee`, `manager`, `hr` and `colleague`; the generated password is in that directory's private `demo-accounts.txt`. You may set `DEMO_PASSWORD` before initialization; it never resets existing passwords. Import the bootstrap SQL file in the next step, not the default export.
+This initializes the original dataset and creates `data/bootstrap/state.csv`, `demo-accounts.txt` and `supabase-migration.sql`. Accounts are `employee`, `manager`, `hr` and `colleague`; the shared password is `12345678`. Every server startup synchronizes existing account passwords to `DEMO_PASSWORD` (default `12345678`). Import the bootstrap SQL file in the next step, not the default export.
 
 For another existing snapshot:
 
@@ -58,7 +58,7 @@ STORAGE_BACKEND=supabase
 DATABASE_URL=postgresql://postgres.PROJECT_REF:ENCODED_PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres?sslmode=require
 ```
 
-Use the database password, not an API key. Percent-encode reserved password characters (`@` → `%40`, `#` → `%23`). Never use `NEXT_PUBLIC_` for this URL. For self-hosted Supabase use its actual host, database port and TLS settings. Local CLI installations commonly use `127.0.0.1:54322` with `sslmode=disable`. Inside a deployed container, `localhost` refers to that container.
+Use the database password, not an API key. Percent-encode reserved password characters (`@` в†’ `%40`, `#` в†’ `%23`). Never use `NEXT_PUBLIC_` for this URL. For self-hosted Supabase use its actual host, database port and TLS settings. Local CLI installations commonly use `127.0.0.1:54322` with `sslmode=disable`. Inside a deployed container, `localhost` refers to that container.
 
 Choose either import method:
 
@@ -123,7 +123,7 @@ Then verify:
 
 - `https://YOUR_APP_DOMAIN/api/health` returns HTTP 200, `"ok": true` and `"storage": "supabase"`.
 - Existing employee, manager and HR accounts can sign in. CSV passwords are preserved; old in-memory sessions need one new login. These accounts do not appear in Supabase Auth.
-- Request → manager approval → evidence → HR confirmation persists across a restart.
+- Request в†’ manager approval в†’ evidence в†’ HR confirmation persists across a restart.
 - Course lessons and assignment uploads persist; test an exam with a configured model to verify grading.
 - A PostgreSQL session remains signed in after an app restart, until its eight-hour expiry.
 

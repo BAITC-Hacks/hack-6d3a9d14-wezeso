@@ -86,7 +86,7 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 			}
 			storage = "supabase"
 		}
-		send(w, 200, map[string]any{"ok": true, "storage": storage, "model": "gemini-3.8-flash", "snapshot": snapshot})
+		send(w, 200, map[string]any{"ok": true, "storage": storage, "model": geminiModel, "snapshot": snapshot})
 		return
 	}
 	if path == "login" && r.Method == "POST" {
@@ -431,7 +431,7 @@ func (a *API) workspace(w http.ResponseWriter, r *http.Request, u User) {
 		problem(w, fail(403, "Нет доступа к этому профилю"))
 		return
 	}
-	out := map[string]any{"user": publicUser(u), "snapshot": snapshot, "roles": s.Roles, "ai": map[string]any{"available": a.AIKey != "" && a.AllowAI, "has_key": a.AIKey != "", "external_allowed": a.AllowAI, "model": "gemini-3.8-flash"}, "counts": map[string]int{"employees": len(s.Employees), "events": len(s.Events), "skills": len(s.Skills), "history": len(s.History)}}
+	out := map[string]any{"user": publicUser(u), "snapshot": snapshot, "roles": s.Roles, "ai": map[string]any{"available": a.AIKey != "" && a.AllowAI, "has_key": a.AIKey != "", "external_allowed": a.AllowAI, "model": geminiModel}, "counts": map[string]int{"employees": len(s.Employees), "events": len(s.Events), "skills": len(s.Skills), "history": len(s.History)}}
 	if e != nil {
 		g, p := s.gaps(*e)
 		history := []History{}
@@ -549,7 +549,7 @@ func runServer() error {
 	defer closeStore()
 	dummy, _ := hashPassword(uid(""))
 	auth := &Auth{Sessions: map[string]Session{}, Attempts: map[string]Attempt{}, DummyHash: dummy, DB: st.DB}
-	a := &API{Store: st, Auth: auth, Origin: env("APP_ORIGIN", "http://localhost:3000"), Secure: os.Getenv("COOKIE_SECURE") == "true", AIKey: os.Getenv("GEMINI_API_KEY"), AllowAI: os.Getenv("ALLOW_EXTERNAL_AI") == "true", AIURL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", AIClient: &http.Client{Timeout: 9 * time.Second}}
+	a := &API{Store: st, Auth: auth, Origin: env("APP_ORIGIN", "http://localhost:3000"), Secure: os.Getenv("COOKIE_SECURE") == "true", AIKey: os.Getenv("GEMINI_API_KEY"), AllowAI: os.Getenv("ALLOW_EXTERNAL_AI") == "true", AIURL: geminiGenerateContentURL, AIClient: &http.Client{Timeout: 9 * time.Second}}
 	agentContext, stopAgent := context.WithCancel(context.Background())
 	defer stopAgent()
 	go a.agentWorker(agentContext)

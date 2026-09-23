@@ -49,7 +49,9 @@
     ".next-mobile/types/**/*.ts",
     ".next-mobile/dev/types/**/*.ts",
     ".next-agent-style-preview/types/**/*.ts",
-    ".next-agent-style-preview/dev/types/**/*.ts"
+    ".next-agent-style-preview/dev/types/**/*.ts",
+    ".next-mobile-build/types/**/*.ts",
+    ".next-mobile-build/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

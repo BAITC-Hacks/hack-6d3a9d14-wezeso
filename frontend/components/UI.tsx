@@ -5,13 +5,13 @@ import { Button } from '@cloudflare/kumo/components/button';
 import { Dialog } from '@cloudflare/kumo/components/dialog';
 import { InputArea } from '@cloudflare/kumo/components/input';
 import { Select } from '@cloudflare/kumo/components/select';
-import { X, Check, ArrowRight, CheckCircle, Clock, Hourglass, MagnifyingGlass, MinusCircle, PlayCircle, Prohibit, UserMinus, WarningCircle, XCircle, Info, type Icon } from '@phosphor-icons/react';
+import { X, Check, ArrowRight, CheckCircle, CircleNotch, Clock, Hourglass, MagnifyingGlass, MinusCircle, PlayCircle, Prohibit, UserMinus, WarningCircle, XCircle, Info, type Icon } from '@phosphor-icons/react';
 import { AppBadge, type BadgeTone } from './AppBadge';
 import { statusName } from '../lib/types';
 import { LoadingStatus } from './Feedback';
 type ButtonProps = ComponentPropsWithRef<typeof Button>;
-export function Btn({ className='', variant='secondary', type='button', ...props }: ButtonProps) {
- return <Button {...props} type={type} variant={variant} className={`btn ${variant} ${className}`} />;
+export function Btn({ className='', variant='secondary', type='button', loading, disabled, icon, ...props }: ButtonProps) {
+ return <Button {...props} type={type} variant={variant} disabled={loading || disabled} aria-busy={loading || undefined} icon={loading ? <CircleNotch className="loading-spinner" size={16} aria-hidden="true"/> : icon} className={`btn ${variant} ${className}`} />;
 }
 export function Choice({label,value,onValueChange,options,required=false,disabled=false}:{label:string;value:string;onValueChange:(value:string)=>void;options:{value:string;label:string}[];required?:boolean;disabled?:boolean}) {
  const {t}=useI18n();

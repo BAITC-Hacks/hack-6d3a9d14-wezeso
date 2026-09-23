@@ -4,8 +4,8 @@
 .intro { margin-bottom: 20px; flex-wrap: wrap; }
 .intro p, .note, .owner, .count { color: var(--muted); font-size: var(--type-body); line-height: 1.7; }
 .toolbar { margin: 22px 0 18px; flex-wrap: wrap; }
-.monthNav h2 { font-size: var(--type-section); min-width: 175px; text-align: center; text-transform: capitalize; }
-.monthControls input { max-width: 170px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; color: var(--text); background: white; font: inherit; font-size: var(--type-body); }
+.monthNav h2 { font-size: var(--type-section); min-width: 175px; text-align: center; }
+.monthControls select { min-width: 0; max-width: 170px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 9px; color: var(--text); background: white; font: inherit; font-size: var(--type-body); }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: start; gap: 22px; }
 .calendar { min-width: 0; }
 .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
@@ -57,7 +57,7 @@
 @container (max-width: 600px) {
   .monthNav { gap: 4px; }
   .monthNav h2 { min-width: 0; flex: 1; font-size: 16px; }
-  .monthControls input { min-width: 0; flex: 1; }
+  .monthControls select { flex: 1; }
   .agendaHeading { flex-wrap: wrap; }
   .additional section { padding: 18px; min-width: 0; }
   .entryActions > button { flex: 1 1 130px; }

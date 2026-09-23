@@ -27,6 +27,7 @@ export default function CalendarPanel({ data, onChoose, onRequests }: { data: Wo
   const undated = data.requests.filter(request => activeCalendarStatuses.includes(request.status) && !validCalendarDate(request.session_date));
   const days = monthDays(month);
   const monthLabel = calendarDateLabel(`${month}-01`, { month: 'long', year: 'numeric' });
+  const year = Number(month.slice(0, 4));
   function changeMonth(value: string) {
     if (!validCalendarDate(`${value}-01`)) return;
     setMonth(value); setSelected('');
@@ -39,7 +40,11 @@ export default function CalendarPanel({ data, onChoose, onRequests }: { data: Wo
     <Tabs variant="underline" value={filter} onValueChange={setFilter} tabs={[{ value: 'all', label: t("Все события") }, { value: 'personal', label: data.user.role === 'employee' ? t("Мои события") : t("Заявки и сроки") }, { value: 'catalog', label: t("Сессии каталога") }]}/>
     <div className={styles.toolbar}>
       <div className={styles.monthNav}><Btn variant="ghost" shape="square" aria-label={t("Предыдущий месяц")} onClick={() => moveMonth(-1)}><CaretLeft size={20}/></Btn><h2 aria-live="polite">{monthLabel}</h2><Btn variant="ghost" shape="square" aria-label={t("Следующий месяц")} onClick={() => moveMonth(1)}><CaretRight size={20}/></Btn></div>
-      <div className={styles.monthControls}><input type="month" aria-label={t("Выбрать месяц")} value={month} onChange={event => changeMonth(event.target.value)}/><Btn onClick={() => changeMonth(data.snapshot.slice(0, 7))}>{t("Текущий месяц")}</Btn></div>
+      <div className={styles.monthControls}>
+        <select aria-label={t("Выбрать месяц")} value={month.slice(5, 7)} onChange={event => changeMonth(`${year}-${event.target.value}`)}>{Array.from({ length: 12 }, (_, index) => { const value = String(index + 1).padStart(2, '0'); return <option key={value} value={value}>{calendarDateLabel(`${year}-${value}-01`, { month: 'long' })}</option>; })}</select>
+        <select aria-label={t("Выбрать год")} value={year} onChange={event => changeMonth(`${event.target.value}-${month.slice(5, 7)}`)}>{Array.from({ length: 21 }, (_, index) => year - 10 + index).filter(value => value >= 1000 && value <= 9999).map(value => <option key={value} value={value}>{value}</option>)}</select>
+        <Btn onClick={() => changeMonth(data.snapshot.slice(0, 7))}>{t("Текущий месяц")}</Btn>
+      </div>
     </div>
     <div className={styles.layout}>
       <div className={styles.calendar}>

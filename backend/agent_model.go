@@ -24,10 +24,13 @@ func (a *API) agentSettings() AgentSettings {
 	if a.Agent != nil {
 		return *a.Agent
 	}
-	c := AgentSettings{Provider: env("AGENT_PROVIDER", "ollama"), Model: env("OLLAMA_MODEL", "qwen3:4b"), URL: env("OLLAMA_URL", "http://127.0.0.1:11434/api/chat")}
+	c := AgentSettings{Provider: env("AGENT_PROVIDER", "gemini"), Model: env("OLLAMA_MODEL", "qwen3:4b"), URL: env("OLLAMA_URL", "http://127.0.0.1:11434/api/chat")}
 	if c.Provider == "gemini" {
-		c.Model = "gemini-3.8-flash"
+		c.Model = geminiModel
 		c.URL = a.AIURL
+		if c.URL == "" {
+			c.URL = geminiGenerateContentURL
+		}
 	}
 	return c
 }

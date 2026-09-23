@@ -13,6 +13,9 @@ import (
 	"time"
 )
 
+const geminiModel = "gemini-3.8-flash"
+const geminiGenerateContentURL = "https://generativelanguage.googleapis.com/v1beta/models/" + geminiModel + ":generateContent"
+
 func signature(c []Candidate) string {
 	b, _ := json.Marshal(c)
 	h := sha256.Sum256(b)
@@ -150,7 +153,7 @@ func (a *API) recommend(w http.ResponseWriter, r *http.Request, u User) {
 			}
 		}
 	}
-	rec := Recommendation{ID: uid("AI"), Employee: empID, Model: "gemini-3.8-flash", At: stamp(), Choices: answer.Choices, Signature: signature(candidates), Evidence: evidence}
+	rec := Recommendation{ID: uid("AI"), Employee: empID, Model: geminiModel, At: stamp(), Choices: answer.Choices, Signature: signature(candidates), Evidence: evidence}
 	err = a.Store.transact(func(s *State) error {
 		if signature(s.candidates(*s.employee(empID))) != rec.Signature {
 			return fail(409, "Данные изменились во время ответа. Запросите рекомендацию снова")

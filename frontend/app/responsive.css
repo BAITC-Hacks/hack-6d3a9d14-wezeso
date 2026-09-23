@@ -8,6 +8,8 @@
 .modal { max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
 .modal :is(form, fieldset, .modal-content) { min-width: 0; }
 .choice-control { min-width: 0; max-width: 100%; }
+.access-panel, .access-panel form > *, .access-panel [data-slot=field] { min-width: 0; max-width: 100%; }
+.access-panel input[type=file] { width: 100%; min-width: 0; }
 .choice-control > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 @container (max-width: 760px) {

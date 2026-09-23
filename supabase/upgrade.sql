@@ -350,11 +350,25 @@ BEGIN
  IF NOT EXISTS (SELECT 1 FROM career_quest.store_meta WHERE id = 1 AND schema_version = 1 AND ready) THEN
   RAISE EXCEPTION 'Career Quest is not initialized: import the complete data export first';
  END IF;
+ IF EXISTS (
+  SELECT 1 FROM pg_namespace n,
+   LATERAL aclexplode(coalesce(n.nspacl, acldefault('n', n.nspowner))) a
+  WHERE n.nspname = 'career_quest' AND a.grantee = 0
+ ) THEN
+  RAISE EXCEPTION 'Unexpected PUBLIC access to career_quest schema';
+ END IF;
  FOREACH t IN ARRAY ARRAY['store_meta', 'imports', 'skills', 'role_profiles', 'employees', 'events',
   'activity_history', 'app_users', 'requests', 'audit_log', 'recommendations', 'sessions',
   'login_attempts', 'agent_runs', 'agent_watches', 'courses', 'course_progress', 'course_uploads', 'exam_attempts'] LOOP
   IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'career_quest' AND tablename = t AND rowsecurity) THEN
    RAISE EXCEPTION 'Missing table or disabled RLS: career_quest.%', t;
+  END IF;
+  IF EXISTS (
+   SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace,
+    LATERAL aclexplode(coalesce(c.relacl, acldefault('r', c.relowner))) a
+   WHERE n.nspname = 'career_quest' AND c.relname = t AND a.grantee = 0
+  ) THEN
+   RAISE EXCEPTION 'Unexpected PUBLIC access to career_quest.%', t;
   END IF;
   FOREACH r IN ARRAY ARRAY['anon', 'authenticated', 'service_role'] LOOP
    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN

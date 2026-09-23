@@ -72,6 +72,15 @@ func TestPostgresDeploymentUpgrade(t *testing.T) {
 	if _, err = db.Exec(ctx, string(upgrade), pgx.QueryExecModeSimpleProtocol); err != nil {
 		t.Fatal(err)
 	}
+	if _, err = db.Exec(ctx, "GRANT SELECT ON career_quest.app_users TO PUBLIC"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Exec(ctx, deploymentVerificationSQL, pgx.QueryExecModeSimpleProtocol); err == nil {
+		t.Fatal("verification accepted PUBLIC access to password hashes")
+	}
+	if _, err = db.Exec(ctx, string(upgrade), pgx.QueryExecModeSimpleProtocol); err != nil {
+		t.Fatal(err)
+	}
 	// Confirm real startup and preserved login against this isolated test database.
 	config := db.Config()
 	connectionURL, err := url.Parse(os.Getenv("TEST_DATABASE_URL"))

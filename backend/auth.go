@@ -19,8 +19,8 @@ import (
 )
 
 func hashPassword(password string) (string, error) {
-	if utf8.RuneCountInString(password) < 12 || len(password) > 128 {
-		return "", errors.New("Пароль должен содержать от 12 до 128 символов")
+	if utf8.RuneCountInString(password) < 8 || len(password) > 128 {
+		return "", errors.New("Пароль должен содержать от 8 до 128 символов")
 	}
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {

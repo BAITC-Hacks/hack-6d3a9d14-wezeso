@@ -24,10 +24,12 @@ npm start
 
 With no storage configuration, the app uses local CSV. Setting `DATABASE_URL` selects Supabase; an explicit `STORAGE_BACKEND=supabase` requires a working database and never silently falls back. Existing Supabase installations receive the additive `002_agent.sql` extension at startup. All original data and accounts are retained.
 
-The agent defaults to local Ollama. For the approved external Gemini setup, use the server-only `.env`:
+The agent and exam grader default to Gemini 3.8 Flash (`gemini-3.8-flash`). For this approved external setup, use the server-only `.env`:
 
 ```dotenv
 AGENT_PROVIDER=gemini
+EXAM_AI_PROVIDER=gemini
+EXAM_GEMINI_MODEL=gemini-3.8-flash
 ALLOW_EXTERNAL_AI=true
 GEMINI_API_KEY=your-server-key
 ```
@@ -38,6 +40,7 @@ For local inference:
 
 ```dotenv
 AGENT_PROVIDER=ollama
+EXAM_AI_PROVIDER=ollama
 OLLAMA_URL=http://127.0.0.1:11434/api/chat
 OLLAMA_MODEL=qwen3:4b
 ALLOW_EXTERNAL_AI=false
