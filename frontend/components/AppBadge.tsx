@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '../lib/i18n';
 
 import type { ReactNode } from 'react';
 import { Badge, type BadgeVariant } from '@cloudflare/kumo/components/badge';
@@ -23,9 +24,11 @@ export function AppBadge({ children, icon: Icon, tone = 'neutral', className = '
   tone?: BadgeTone;
   className?: string;
 }) {
+  const {t}=useI18n();
+  const content=typeof children === "string" ? t(children) : children;
   return <Badge variant={variants[tone]} className={`app-badge app-badge--${tone} ${className}`}
     icon={<Icon size={14} weight="fill" aria-hidden="true" />}>
-    <span className="app-badge-label" title={typeof children === 'string' ? children : undefined}>{children}</span>
+    <span className="app-badge-label" title={typeof content === 'string' ? content : undefined}>{content}</span>
   </Badge>;
 }
 
@@ -44,12 +47,19 @@ const activityFormats: Record<string, BadgeAppearance> = {
   self_paced: { icon: Timer, tone: 'orange' },
 };
 
-export function ActivityBadges({ event }: { event: Pick<Event, 'type' | 'format' | 'duration_hours'> }) {
+export function ActivityTypeBadge({ event, className }: { event: Pick<Event, 'type'>; className?: string }) {
+  const {t}=useI18n();
   const type = activityTypes[event.type] || { icon: Tag, tone: 'neutral' as const };
+  return <AppBadge {...type} className={className}>{t(typeName[event.type] || event.type)}</AppBadge>;
+}
+
+export function ActivityBadges({ event }: { event: Pick<Event, 'type' | 'format' | 'duration_hours'> }) {
+ const { t, date, number, languageTag } = useI18n();
+
   const format = activityFormats[event.format] || { icon: Compass, tone: 'neutral' as const };
   return <div className="badge-group candidate-meta">
-    <AppBadge {...type}>{typeName[event.type] || event.type}</AppBadge>
-    <AppBadge icon={Clock} tone="purple">{event.duration_hours} ч</AppBadge>
-    <AppBadge {...format}>{formatName[event.format] || event.format}</AppBadge>
+    <ActivityTypeBadge event={event}/>
+    <AppBadge icon={Clock} tone="purple">{number(event.duration_hours)}  {t("ч")}</AppBadge>
+    <AppBadge {...format}>{t(formatName[event.format] || event.format)}</AppBadge>
   </div>;
 }

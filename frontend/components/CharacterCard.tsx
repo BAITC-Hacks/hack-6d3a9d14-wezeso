@@ -1,14 +1,17 @@
 'use client';
+import { useI18n } from '../lib/i18n';
 import { Btn, Status } from './UI';
 import { AppBadge } from './AppBadge';
 
 import type { CSSProperties } from 'react';
-import { ArrowRight, CheckCircle, Flag, Sparkle, Star } from '@phosphor-icons/react';
+import { ArrowRight, CheckCircle, Sparkle, Star } from '@phosphor-icons/react';
 import Avatar from './Avatar';
 import { characterAppearance, characterIdentity, characterProgress } from '../lib/character';
 import { roleName, type Workspace } from '../lib/types';
 
 export default function CharacterCard({ data, onQuest }: { data: Workspace; onQuest: () => void }) {
+ const { t, date, number, languageTag } = useI18n();
+
   const identity = characterIdentity(data.user);
   const character = characterAppearance(identity);
   const progress = characterProgress(data.user.employee_id, data.history, data.requests);
@@ -19,26 +22,24 @@ export default function CharacterCard({ data, onQuest }: { data: Workspace; onQu
   const firstName = data.profile?.full_name.split(' ')[0] || data.user.login;
   const style = { '--character-color': character.color, '--character-tint': character.tint } as CSSProperties;
 
-  return <section className="character-card" style={style} aria-label="Ваш RPG-персонаж">
+  return <section className="character-card" style={style} aria-label={t("Ваш RPG-персонаж")}>
     <div className="character-stage">
       <span className="character-orbit" aria-hidden="true"/>
       <Sparkle className="character-spark" size={22} weight="fill" aria-hidden="true"/>
-      <Avatar key={identity} identity={identity} size={204} label={`Персонаж ${firstName}: ${character.name}`}/>
-      <AppBadge className="character-level" icon={Star} tone="purple">Уровень {progress.level}</AppBadge>
+      <Avatar key={identity} identity={identity} size={204} label={t("Персонаж {0}: {1}", { 0: firstName, 1: character.name })}/>
+      <AppBadge className="character-level" icon={Star} tone="purple">{t("Уровень")} {progress.level}</AppBadge>
     </div>
     <div className="character-story">
-      <span className="character-eyebrow">Ваш персонаж</span>
-      <h2>{character.name}<span>Блоб {firstName}</span></h2>
-      <p className="character-class">{data.profile?.role || roleName[data.user.role]}</p>
-      <div className="character-xp-label"><b>{progress.xp} XP</b><span>{progress.levelXP} / {progress.nextLevelXP} до уровня {progress.level + 1}</span></div>
-      <div className="character-xp" role="progressbar" aria-label="Опыт до следующего уровня персонажа" aria-valuemin={0} aria-valuemax={progress.nextLevelXP} aria-valuenow={progress.levelXP}><span style={{ width: `${progress.levelXP / progress.nextLevelXP * 100}%` }}/></div>
-      <p className="character-xp-note"><CheckCircle size={15}/>{progress.completed} завершено</p>
+      <h2>{t(character.name)}<span>{t("Блоб")} {firstName}</span></h2>
+      <p className="character-class">{t(data.profile?.role || roleName[data.user.role])}</p>
+      <div className="character-xp-label"><b>{progress.xp} XP</b><span>{progress.levelXP} / {progress.nextLevelXP}  {t("до уровня")} {progress.level + 1}</span></div>
+      <div className="character-xp" role="progressbar" aria-label={t("Опыт до следующего уровня персонажа")} aria-valuemin={0} aria-valuemax={progress.nextLevelXP} aria-valuenow={progress.levelXP}><span style={{ width: `${progress.levelXP / progress.nextLevelXP * 100}%` }}/></div>
+      <p className="character-xp-note"><CheckCircle size={15}/>{progress.completed}  {t("завершено")}</p>
     </div>
     <div className="character-quest">
-      <span className="character-eyebrow"><Flag size={15}/>{active ? 'Текущий квест' : 'Следующий квест'}</span>
-      <h3>{quest || (data.user.role === 'hr' ? 'Заявки команды' : 'Выберите активность')}</h3>
+      <h3>{quest || (data.user.role === 'hr' ? t("Заявки команды") : t("Выберите активность"))}</h3>
       {active && <Status status={active.status}/>}
-      <Btn variant="ghost" type="button" className="text-link" onClick={onQuest}>{active ? 'Открыть мои шаги' : data.user.role === 'hr' ? 'К заявкам команды' : 'Выбрать квест'}<ArrowRight size={17}/></Btn>
+      <Btn variant="ghost" type="button" className="text-link" onClick={onQuest}>{active ? t("Открыть мои шаги") : data.user.role === 'hr' ? t("К заявкам команды") : t("Выбрать квест")}<ArrowRight size={17}/></Btn>
     </div>
   </section>;
 }

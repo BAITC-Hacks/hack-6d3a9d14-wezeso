@@ -1,5 +1,7 @@
 # Local Supabase setup and migration
 
+Course extension for an already initialized database: run [data/courses-supabase.sql](../data/courses-supabase.sql) in SQL Editor. Fresh exports include the extension automatically. See [COURSES.md](COURSES.md) for the course workflow, file limits and AI configuration.
+
 The default storage backend is now Supabase PostgreSQL. The browser uses the same Next.js → Go API routes. The Go server connects directly to PostgreSQL using `DATABASE_URL`; no Supabase API URL, anon key, service-role key, or frontend secrets are required. Existing username/password accounts and role checks are preserved. This does not use Supabase Auth.
 
 ## Move the existing data

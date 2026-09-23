@@ -18,6 +18,7 @@ backend.on('exit',()=>{const lock=resolve(process.env.DATA_DIR||'data','state.lo
 let ready=false;for(let i=0;i<80;i++){try{const r=await fetch(`http://127.0.0.1:${process.env.API_PORT}/api/health`);if(r.ok){ready=true;break;}}catch{}await new Promise(r=>setTimeout(r,150));}
 if(!ready){stop();console.error('Backend did not become ready. See output above.');process.exitCode=1;}else{
  const frontend=spawn(process.execPath,[resolve('frontend/node_modules/next/dist/bin/next'),process.env.NODE_ENV==='production'?'start':'dev','--hostname','127.0.0.1','--port','3000'],{cwd:resolve('frontend'),env:process.env,stdio:'inherit'});children.push(frontend);
- console.log(`\nOpen http://localhost:3000 · Storage: ${process.env.STORAGE_BACKEND || 'supabase'} · Existing app logins are preserved\n`);
+ console.log(`\nOpen http://localhost:3000 · Storage: ${process.env.STORAGE_BACKEND || (process.env.DATABASE_URL ? 'supabase' : 'csv')} · Existing app logins are preserved\n`);
  for(const c of children)c.on('exit',code=>{if(!stopping){process.exitCode=code||0;stop();}});
 }
+

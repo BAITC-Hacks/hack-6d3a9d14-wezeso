@@ -25,8 +25,6 @@
 .empty-state-blob { display: grid; place-items: center; margin: -12px 0 -8px; }
 .empty-state-blob svg { display: block; }
 .empty-state--compact .empty-state-blob { margin: -8px 0 -5px; }
-.skeleton-symbol { display: none; }
-.skeleton-rows .skeleton-card { grid-template-columns: 1fr; }
 .app-shell .filter-summary { font-size: 12px; }
 .app-shell .skills-section { background: transparent; }
 @container(max-width:1000px) {

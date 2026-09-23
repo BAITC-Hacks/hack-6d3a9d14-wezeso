@@ -7,10 +7,19 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func openStore() (*Store, func(), error) {
-	if env("STORAGE_BACKEND", "supabase") == "supabase" {
+	backend := os.Getenv("STORAGE_BACKEND")
+	if backend == "" {
+		backend = "csv"
+		if os.Getenv("DATABASE_URL") != "" {
+			backend = "supabase"
+		}
+	}
+	if backend == "supabase" {
 		url := os.Getenv("DATABASE_URL")
 		if url == "" {
 			return nil, nil, errors.New("DATABASE_URL is required for Supabase. Set it in .env and apply data/supabase-migration.sql; use STORAGE_BACKEND=csv only for the legacy local mode")
@@ -28,6 +37,15 @@ func openStore() (*Store, func(), error) {
 			db.Close()
 			return nil, nil, errors.New("Supabase schema/data not ready. Generate SQL with npm run db:export and apply it before starting the app")
 		}
+		// Additive extension only: preserve all existing accounts and business data.
+		if _, err = db.Exec(ctx, agentSchemaSQL, pgx.QueryExecModeSimpleProtocol); err != nil {
+			db.Close()
+			return nil, nil, errors.New("cannot apply agent extension; apply backend/migrations/002_agent.sql using the database owner")
+		}
+		if _, err = db.Exec(ctx, courseSchemaSQL, pgx.QueryExecModeSimpleProtocol); err != nil {
+			db.Close()
+			return nil, nil, errors.New("cannot apply course extension; apply backend/migrations/003_courses.sql using the database owner")
+		}
 		state, err := loadPostgres(ctx, db)
 		if err != nil {
 			db.Close()
@@ -37,9 +55,14 @@ func openStore() (*Store, func(), error) {
 			db.Close()
 			return nil, nil, errors.New("Supabase has no app accounts; import the complete state.csv export")
 		}
-		return &Store{DB: db, State: state}, db.Close, nil
+		st := &Store{DB: db, State: state}
+		if err := st.transact(func(s *State) error { ensureCourses(s); return nil }); err != nil {
+			db.Close()
+			return nil, nil, err
+		}
+		return st, db.Close, nil
 	}
-	if os.Getenv("STORAGE_BACKEND") != "csv" {
+	if backend != "csv" {
 		return nil, nil, errors.New("STORAGE_BACKEND must be supabase or csv")
 	}
 	dir := env("DATA_DIR", "data")
@@ -62,6 +85,11 @@ func openStore() (*Store, func(), error) {
 		}
 	}
 	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	ensureCourses(&state)
+	if err := writeRows(filepath.Join(dir, "state.csv"), state); err != nil {
 		cleanup()
 		return nil, nil, err
 	}

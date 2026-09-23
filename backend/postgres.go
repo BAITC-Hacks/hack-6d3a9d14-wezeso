@@ -30,6 +30,12 @@ var entityTables = []entityTable{
 	{"Requests", "requests", []string{"id"}, []string{"session_date", "confirmed_by"}},
 	{"Audits", "audit_log", []string{"id"}, []string{"employee_id"}},
 	{"Recommendations", "recommendations", []string{"id"}, nil},
+	{"AgentRuns", "agent_runs", []string{"id"}, nil},
+	{"AgentWatches", "agent_watches", []string{"employee_id"}, nil},
+	{"Courses", "courses", []string{"event_id"}, nil},
+	{"CourseProgress", "course_progress", []string{"id"}, nil},
+	{"CourseUploads", "course_uploads", []string{"id"}, nil},
+	{"Exams", "exam_attempts", []string{"id"}, nil},
 }
 
 func connectPostgres(ctx context.Context, url string) (*pgxpool.Pool, error) {

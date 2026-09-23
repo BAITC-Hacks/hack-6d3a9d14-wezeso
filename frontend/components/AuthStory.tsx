@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '../lib/i18n';
 import { Btn } from './UI';
 
 import { useEffect, useRef, useState } from 'react';
@@ -228,20 +229,21 @@ function Globe({ paused }: { paused: boolean }) {
 }
 
 export default function AuthStory() {
+ const { t, date, number, languageTag } = useI18n();
+
   const [paused, setPaused] = useState(false);
   return (
     <section className={styles.story}>
       <Globe paused={paused} />
       <img className={styles.logo} src="/halyk.svg" alt="Halyk" width={145} height={51} />
       <div className={styles.body}>
-        <span className={styles.eyebrow}>CAREER QUEST</span>
-        <h1>Ваш карьерный<br />маршрут</h1>
+        <h1>{t("Ваш карьерный")}<br />{t("маршрут")}</h1>
       </div>
       <div className={styles.footer}>
-        <span>Career Quest · демо</span>
+        <span>{t("Career Quest · демо")}</span>
         <Btn variant="ghost" shape="square" className={styles.motionToggle} type="button" onClick={() => setPaused(!paused)}
-          aria-label={paused ? 'Включить анимацию' : 'Приостановить анимацию'}
-          title={paused ? 'Включить анимацию' : 'Приостановить анимацию'}>
+          aria-label={paused ? t("Включить анимацию") : t("Приостановить анимацию")}
+          title={paused ? t("Включить анимацию") : t("Приостановить анимацию")}>
           {paused ? <Play size={15} weight="fill" /> : <Pause size={15} weight="fill" />}
         </Btn>
       </div>

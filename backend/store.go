@@ -142,6 +142,24 @@ func writeRows(path string, s State) error {
 	for _, v := range s.Recommendations {
 		write("recommendation", v.ID, v)
 	}
+	for _, v := range s.AgentRuns {
+		write("agent_run", v.ID, v)
+	}
+	for _, v := range s.AgentWatches {
+		write("agent_watch", v.Employee, v)
+	}
+	for _, v := range s.Courses {
+		write("course", v.Event, v)
+	}
+	for _, v := range s.CourseProgress {
+		write("course_progress", v.ID, v)
+	}
+	for _, v := range s.CourseUploads {
+		write("course_upload", v.ID, v)
+	}
+	for _, v := range s.Exams {
+		write("exam", v.ID, v)
+	}
 	w.Flush()
 	if err == nil {
 		err = w.Error()
@@ -201,6 +219,18 @@ func loadRows(path string) (State, error) {
 			target = &Audit{}
 		case "recommendation":
 			target = &Recommendation{}
+		case "agent_run":
+			target = &AgentRun{}
+		case "agent_watch":
+			target = &AgentWatch{}
+		case "course":
+			target = &Course{}
+		case "course_progress":
+			target = &CourseProgress{}
+		case "course_upload":
+			target = &CourseUpload{}
+		case "exam":
+			target = &ExamAttempt{}
 		default:
 			return s, errors.New("Неизвестная запись state.csv")
 		}
@@ -226,6 +256,18 @@ func loadRows(path string) (State, error) {
 			s.Audits = append(s.Audits, *v)
 		case *Recommendation:
 			s.Recommendations = append(s.Recommendations, *v)
+		case *AgentRun:
+			s.AgentRuns = append(s.AgentRuns, *v)
+		case *AgentWatch:
+			s.AgentWatches = append(s.AgentWatches, *v)
+		case *Course:
+			s.Courses = append(s.Courses, *v)
+		case *CourseProgress:
+			s.CourseProgress = append(s.CourseProgress, *v)
+		case *CourseUpload:
+			s.CourseUploads = append(s.CourseUploads, *v)
+		case *ExamAttempt:
+			s.Exams = append(s.Exams, *v)
 		}
 	}
 	return s, nil

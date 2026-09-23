@@ -6,10 +6,17 @@ export class ApiError extends Error {
 }
 
 export async function requestJSON(path: string, options: RequestInit = {}) {
-  const timeout = AbortSignal.timeout(path === 'recommendations' ? 60000 : 15000);
+  const timeout = AbortSignal.timeout(path === 'courses/grade' ? 70000 : path === 'recommendations' ? 60000 : 15000);
+  let headers = options.headers;
+  if (typeof document !== 'undefined') {
+    const localizedHeaders = new Headers(headers);
+    localizedHeaders.set('Accept-Language', document.documentElement.lang === 'kk' ? 'kk-KZ' : 'ru-KZ');
+    headers = localizedHeaders;
+  }
   try {
     const response = await fetch(`/api/${path}`, {
       ...options,
+      headers,
       signal: options.signal ? AbortSignal.any([options.signal, timeout]) : timeout,
     });
     const json = await response.json().catch(error => {

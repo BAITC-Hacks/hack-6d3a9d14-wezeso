@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"slices"
 	"strings"
 	"syscall"
 	"time"
@@ -25,6 +24,7 @@ type API struct {
 	AllowAI  bool
 	AIURL    string
 	AIClient *http.Client
+	Agent    *AgentSettings
 }
 type apiError struct {
 	Code    int
@@ -61,6 +61,7 @@ func visible(u User, e *Employee) bool {
 	return e != nil && (u.Role == "hr" || u.Employee == e.ID || (u.Role == "manager" && e.Manager != nil && *e.Manager == u.Employee))
 }
 func (a *API) handler(w http.ResponseWriter, r *http.Request) {
+	r = r.WithContext(withUILanguage(r.Context(), r.Header.Get("Accept-Language")))
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	r.Body = http.MaxBytesReader(w, r.Body, 4<<20)
@@ -106,6 +107,14 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u := session.User
+	if strings.HasPrefix(path, "hr/") {
+		a.hrHandler(w, r, u, path)
+		return
+	}
+	if strings.HasPrefix(path, "courses/") {
+		a.courseHandler(w, r, u, path)
+		return
+	}
 	if path == "session" && r.Method == "GET" {
 		send(w, 200, map[string]any{"user": publicUser(u), "csrf": session.CSRF})
 		return
@@ -124,6 +133,22 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 	}
 	if path == "recommendations" && r.Method == "POST" {
 		a.recommend(w, r, u)
+		return
+	}
+	if path == "agent/runs" && r.Method == "POST" {
+		a.agentCreate(w, r, u)
+		return
+	}
+	if path == "agent/autopilot" && r.Method == "POST" {
+		a.autopilot(w, r, u)
+		return
+	}
+	if path == "agent/run" && r.Method == "GET" {
+		a.agentGet(w, r, u)
+		return
+	}
+	if path == "agent/action" && r.Method == "POST" {
+		a.agentAction(w, r, u)
 		return
 	}
 	if path == "import" && r.Method == "POST" {
@@ -176,39 +201,8 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 				if !in.Confirmed {
 					return fail(400, "Нужно явное подтверждение")
 				}
-				e := s.employee(u.Employee)
-				if e == nil || u.Role == "hr" {
-					return fail(403, "Заявку подаёт сотрудник из своего профиля")
-				}
-				var candidate *Candidate
-				for _, c := range s.candidates(*e) {
-					if c.Event.ID == in.Event {
-						cc := c
-						candidate = &cc
-					}
-				}
-				if candidate == nil {
-					return fail(400, "Активность недоступна")
-				}
-				if candidate.Blocked != "" {
-					return fail(409, candidate.Blocked)
-				}
-				status := "pending_manager"
-				if in.Decline {
-					status = "declined"
-				} else {
-					if e.Manager == nil {
-						return fail(409, "Нет непосредственного руководителя: HR должен проверить профиль")
-					}
-					if candidate.Event.Format != "self_paced" && (!slices.Contains(candidate.Event.Sessions, in.Session) || in.Session < snapshot) {
-						return fail(400, "Выберите доступную сессию")
-					}
-				}
-				now := stamp()
-				req := Request{ID: uid("Q"), Employee: e.ID, Event: in.Event, Status: status, Session: in.Session, Created: now, Updated: now, Gains: map[string]int{}}
-				s.Requests = append(s.Requests, req)
-				s.audit(u, e.ID, req.ID, status, candidate.Event.Title)
-				return nil
+				_, err := createRequest(s, u, in.Event, in.Session, in.Decline)
+				return err
 			})
 		}
 	case "transition":
@@ -252,7 +246,7 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 				}
 				login := strings.ToLower(strings.TrimSpace(in.Login))
 				if len(login) < 3 || len(login) > 80 || strings.ContainsAny(login, " \n\r\t") {
-					return fail(400, "Логин: 3–80 символов без пробелов")
+					return fail(400, "Логин: от 3 до 80 символов без пробелов")
 				}
 				for _, v := range s.Users {
 					if v.Login == login || v.Employee == e.ID {
@@ -312,6 +306,9 @@ func transition(s *State, u User, id, action, note string, confirmed bool) error
 			req.Status = "rejected"
 		}
 	case "submit":
+		if s.course(req.Event) != nil {
+			return fail(409, "Для этого курса нужно пройти уроки и экзамен")
+		}
 		if u.Employee != req.Employee {
 			return fail(403, "Результат отправляет сотрудник")
 		}
@@ -324,6 +321,9 @@ func transition(s *State, u User, id, action, note string, confirmed bool) error
 		req.Evidence = note
 		req.Status = "pending_hr"
 	case "complete", "return":
+		if s.course(req.Event) != nil {
+			return fail(409, "Встроенный курс завершается успешным экзаменом")
+		}
 		if u.Role != "hr" || u.Employee == req.Employee {
 			return fail(403, "Результат подтверждает HR")
 		}
@@ -468,6 +468,22 @@ func (a *API) workspace(w http.ResponseWriter, r *http.Request, u User) {
 		}
 	}
 	out["requests"] = requests
+	out["courses"] = courseCatalog(s)
+	out["skills"] = s.Skills
+	out["agent"] = a.agentInfo()
+	runs := []AgentRun{}
+	if u.Employee != "" && empID == u.Employee && u.Role != "hr" {
+		for _, run := range s.AgentRuns {
+			if run.Employee == u.Employee {
+				runs = append(runs, run)
+			}
+		}
+	}
+	if len(runs) > 10 {
+		runs = runs[len(runs)-10:]
+	}
+	out["agent_runs"] = runs
+	out["agent_watch"] = s.agentWatch(u.Employee)
 	out["audit"] = audits
 	out["events"] = s.Events
 	roster := []map[string]any{}
@@ -534,11 +550,15 @@ func runServer() error {
 	dummy, _ := hashPassword(uid(""))
 	auth := &Auth{Sessions: map[string]Session{}, Attempts: map[string]Attempt{}, DummyHash: dummy, DB: st.DB}
 	a := &API{Store: st, Auth: auth, Origin: env("APP_ORIGIN", "http://localhost:3000"), Secure: os.Getenv("COOKIE_SECURE") == "true", AIKey: os.Getenv("GEMINI_API_KEY"), AllowAI: os.Getenv("ALLOW_EXTERNAL_AI") == "true", AIURL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", AIClient: &http.Client{Timeout: 9 * time.Second}}
-	server := &http.Server{Addr: "127.0.0.1:" + env("PORT", "8080"), Handler: http.HandlerFunc(a.handler), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
+	agentContext, stopAgent := context.WithCancel(context.Background())
+	defer stopAgent()
+	go a.agentWorker(agentContext)
+	server := &http.Server{Addr: "127.0.0.1:" + env("PORT", "8080"), Handler: http.HandlerFunc(a.handler), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 75 * time.Second, IdleTimeout: 60 * time.Second}
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-signals
+		stopAgent()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		_ = server.Shutdown(ctx)

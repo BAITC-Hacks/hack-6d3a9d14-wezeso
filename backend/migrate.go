@@ -20,6 +20,12 @@ import (
 //go:embed migrations/001_supabase.sql
 var schemaSQL string
 
+//go:embed migrations/002_agent.sql
+var agentSchemaSQL string
+
+//go:embed migrations/003_courses.sql
+var courseSchemaSQL string
+
 func dollarQuote(value string) string {
 	tag := "$cq$"
 	for strings.Contains(value, tag) {
@@ -69,7 +75,7 @@ func exportSQL(state State) (string, error) {
 		fmt.Fprintf(&body, "INSERT INTO career_quest.%s SELECT * FROM jsonb_populate_recordset(NULL::career_quest.%s, %s::jsonb);\n", t.table, t.table, dollarQuote(string(payload)))
 	}
 	fmt.Fprintf(&body, "INSERT INTO career_quest.imports (checksum) VALUES ('%s');\nUPDATE career_quest.store_meta SET ready = true WHERE id = 1;\nEND\n", checksum)
-	return "-- Career Quest: schema + complete data migration. Contains private password hashes.\n" + counts.String() + schemaSQL + "\nBEGIN;\nSET LOCAL standard_conforming_strings = on;\nSET CONSTRAINTS ALL DEFERRED;\nDO " + dollarQuote(body.String()) + ";\nCOMMIT;\n" + verificationSQL(), nil
+	return "-- Career Quest: schema + complete data migration. Contains private password hashes.\n" + counts.String() + schemaSQL + "\n" + agentSchemaSQL + "\n" + courseSchemaSQL + "\nBEGIN;\nSET LOCAL standard_conforming_strings = on;\nSET CONSTRAINTS ALL DEFERRED;\nDO " + dollarQuote(body.String()) + ";\nCOMMIT;\n" + verificationSQL(), nil
 }
 
 func verificationSQL() string {
@@ -112,6 +118,7 @@ func databaseCommand() (bool, error) {
 		if err != nil {
 			return true, fmt.Errorf("cannot export source state: %w", err)
 		}
+		ensureCourses(&s)
 		sql, err := exportSQL(s)
 		if err != nil {
 			return true, err

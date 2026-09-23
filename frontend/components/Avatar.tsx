@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '../lib/i18n';
 // React adapter for jeremy-prt/bloub's MIT-licensed framework-free engine.
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { BotEngine } from '../vendor/bloub/engine';
@@ -10,6 +11,8 @@ import { characterAppearance } from '../lib/character';
 type Props = { state?: StateId; size?: number; identity?: string; label?: string; animated?: boolean };
 
 export default function Avatar({ state = 'idle', size = 160, identity, label, animated = true }: Props) {
+ const { t, date, number, languageTag } = useI18n();
+
   const appearance = useMemo(() => characterAppearance(identity || 'career-quest:visitor'), [identity]);
   const shape = SHAPE_BY_ID.get(appearance.shape)!.radii;
   const expression = EXPRESSION_BY_ID.get(appearance.expression)!;
@@ -106,7 +109,7 @@ export default function Avatar({ state = 'idle', size = 160, identity, label, an
     };
   }, [engine, animated, state, shape, expression]);
 
-  return <svg ref={svg} className="bloub" data-state={state} data-character={identity} data-palette={appearance.palette} data-shape={appearance.shape} data-pattern={appearance.pattern} width={size} height={size} viewBox="-158 -158 316 316" role="img" aria-label={label || (identity ? `Ваш персонаж — ${appearance.name}` : 'Блоб — персонаж Career Quest')}>
+  return <svg ref={svg} className="bloub" data-state={state} data-character={identity} data-palette={appearance.palette} data-shape={appearance.shape} data-pattern={appearance.pattern} width={size} height={size} viewBox="-158 -158 316 316" role="img" aria-label={label || (identity ? t("Ваш персонаж: {0}", { 0: appearance.name }) : t("Блоб, персонаж Career Quest"))}>
     <defs>
       <linearGradient id={`color-${id}`} x1="0" y1="0" x2=".85" y2="1"><stop offset="0" stopColor={appearance.highlight}/><stop offset=".65" stopColor={appearance.color}/><stop offset="1" stopColor={appearance.color}/></linearGradient>
       <clipPath id={`clip-${id}`}><path d={frame.bodyPath}/></clipPath>

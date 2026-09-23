@@ -6,5 +6,9 @@ const character=spawnSync(process.execPath,['scripts/character.test.mjs'],{stdio
 if(character.status!==0)process.exit(character.status??1);
 const api=spawnSync(process.execPath,['scripts/api.test.mjs'],{stdio:'inherit'});
 if(api.status!==0)process.exit(api.status??1);
+const i18n=spawnSync(process.execPath,['scripts/i18n.test.mjs'],{stdio:'inherit'});
+if(i18n.status!==0)process.exit(i18n.status??1);
+const calendar=spawnSync(process.execPath,['scripts/calendar.test.mjs'],{stdio:'inherit'});
+if(calendar.status!==0)process.exit(calendar.status??1);
 const result=spawnSync(go,['test','-v','./...'],{cwd:resolve('backend'),stdio:'inherit',env:{...process.env,GOCACHE:resolve('.tools/go-cache'),GOMODCACHE:process.env.GOMODCACHE||resolve('.tools/go-mod')}});
 process.exitCode=result.status??1;

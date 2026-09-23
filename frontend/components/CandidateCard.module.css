@@ -1,9 +1,7 @@
 .card { display: flex; flex-direction: column; min-width: 0; border: 1px solid #e1e3de; border-radius: 24px; overflow: hidden; background: #fff; transition: none; }
 .card:hover,.card:focus-within { border-color: #aeb9b0; }
 .body { display: flex; flex-direction: column; flex: 1; padding: 24px 24px 20px; min-width: 0; }
-.type { color: #747a71; font-size: 12px; }
-.card .title { color: #222720; font-size: 19px; font-weight: 500; line-height: 1.45; letter-spacing: -.5px; margin: 10px 0 12px; min-height: 55px; overflow-wrap: anywhere; }
-.metadata { color: #686f64; font-size: 12px; }
+.card .title { color: #222720; font-size: 19px; font-weight: 500; line-height: 1.45; letter-spacing: -.5px; margin: 0 0 12px; min-height: 55px; overflow-wrap: anywhere; }
 .card .details { padding-top: 14px; margin-top: auto; }
 .card .details summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 400; color: #6e756b; min-height: 30px; list-style: none; }
 .details summary::-webkit-details-marker { display: none; }

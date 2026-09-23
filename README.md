@@ -1,167 +1,109 @@
-# Halyk · Career Quest
+![HackAlem Wezeso | Career Quest](public/Frame%203.png)
 
-**Supabase:** приложение теперь по умолчанию хранит данные в локальном Supabase PostgreSQL. Перед запуском выполните `npm run db:export`, примените `data/supabase-migration.sql` и задайте серверный `DATABASE_URL` в `.env`. Подробная инструкция: [docs/SUPABASE.md](docs/SUPABASE.md). Существующие логины и пароли сохраняются. Приведённые ниже сведения о CSV описывают прежний режим, доступный явно через `STORAGE_BACKEND=csv`.
+# Career Quest
 
-Рабочий локальный прототип Case 1: профиль → объяснимый выбор активности → руководитель → результат сотрудника → проверка HR → рост навыков. Go + Next.js / TypeScript, Kumo UI, CSV, серверный Gemini 3.8 Flash, React-адаптация bloub.
+**Сайт проекта: [hackathon.wezeso.me](https://hackathon.wezeso.me)**
+
+Мы сделали Career Quest для первого кейса Halyk на HackAlem. Сотрудник выбирает карьерную цель, видит, каких навыков ему не хватает, и получает подходящие варианты обучения. Руководитель согласует заявки, а результат обучения меняет профиль навыков.
+
+## Что есть в проекте
+
+- Личный кабинет с навыками, карьерной целью, историей обучения и прогрессом до нужного грейда.
+- Подбор мероприятий с объяснением, почему они подходят сотруднику.
+- ИИ-помощник, который составляет план развития и обновляет его при изменении цели или нагрузки.
+- Три встроенных курса: коммуникация, SQL и документация. Внутри есть видео, конспекты и экзамены.
+- Кабинет руководителя для работы с командой и согласования заявок.
+- HR-кабинет с аналитикой, созданием мероприятий, проверкой результатов, импортом данных и моделированием роста.
+- Календарь с экспортом в `.ics`, Google Календарь и Outlook. Экспорт разовый, без синхронизации.
+- Переключение интерфейса между русским и казахским языками.
+
+## Как мы реализовали логику
+
+Сначала берём навыки из профиля и добавляем результаты обучения после последней оценки. Затем сравниваем их с требованиями к целевой роли и грейду. Если цель не задана, используем следующий грейд текущей роли, а для Lead оставляем текущий. Процент готовности показывает, какая доля требуемых уровней навыков уже закрыта.
+
+Перед подбором проверяем роль, грейд, входные требования, доступные даты и историю участия. Пройденные активности повторно не предлагаем, кроме регулярного клуба. Текущие заявки блокируют повторы. Обязательное обучение учитываем отдельно.
+
+Оставшиеся варианты оцениваем по понятным правилам: закрытие одного уровня критичного навыка даёт 12 баллов, другого целевого навыка даёт 4. Длительность, прошлые пропуски и неудобный формат снижают оценку. Ограничения по времени и формату дополнительно учитываем в плане помощника. Расчёт находится в [backend/model.go](backend/model.go).
+
+Дальше есть два сценария:
+
+1. **Обычное мероприятие:** сотрудник отправляет заявку, руководитель согласует, сотрудник описывает результат, HR проверяет его. После подтверждения начисляем прирост навыков.
+2. **Встроенный курс:** после согласования сотрудник проходит уроки и сдаёт экзамен. В нём четыре типа заданий: короткий ответ, выбор варианта, эссе и файл. Сервер проверяет выбор варианта, ИИ оценивает письменные ответы. Проходной балл 70 из 100, после него начисляем навыки без отдельной проверки HR.
+
+Прирост ограничен условиями мероприятия и шкалой до 5. Повторное подтверждение не начисляет его второй раз. Права и переходы между этапами проверяем на сервере. Грейд автоматически не повышаем.
+
+Помощник использует Ollama или Gemini. Он получает допустимые активности, проверяет план через серверные инструменты и сохраняет от одного до трёх шагов. Заявки создаются после подтверждения сотрудника. Если модель недоступна, показываем расчётный план с соответствующей пометкой. Для проверки письменных заданий экзамена нужна работающая модель.
+
+В HR-аналитике есть индекс внимания по истории обучения, пропускам и просрочкам. Это сумма объяснимых факторов для разговора с сотрудником. Данных об увольнениях для обучения модели в датасете нет.
+
+## Стек и данные
+
+Интерфейс написали на Next.js 16, React 19 и TypeScript, использовали Kumo UI. Сервер написали на Go 1.25. Запросы из браузера идут через Next.js в Go API.
+
+Без настройки базы храним состояние в `data/state.csv`. При заданном `DATABASE_URL` используем PostgreSQL через Supabase. Пароли храним в виде хешей, доступ проверяем по серверным сессиям и ролям. Ключи ИИ и базы остаются на сервере.
+
+Исходный датасет синтетический: 200 сотрудников, 40 мероприятий, 60 навыков, 32 профиля ролей и 2743 записи истории. В расчётах используем дату среза `2026-10-01`. Три демо-курса добавляются отдельно. Формат исходных данных описан в [README.ru.md](README.ru.md).
+
+## Локальный запуск
+
+Нужны Node.js 22+ и Go 1.25+. Из корня проекта:
 
 ```sh
 npm start
 ```
 
-Открыть **http://localhost:3000**. Требуются Node.js 22+ и Go 1.25+; в текущем workspace Go уже лежит в `.tools/go`. Зависимости frontend устанавливаются автоматически при первом запуске.
+Скрипт установит зависимости интерфейса, соберёт Go API и запустит приложение на [localhost:3000](http://localhost:3000).
 
-Логины: **employee**, **manager**, **hr**, **colleague**. Сгенерированный пароль находится в локальном `data/demo-accounts.txt`. HR выдаёт новые учётные записи через интерфейс. Пароли в CSV — PBKDF2-HMAC-SHA256 (600 000 итераций); сырой пароль и session token не попадают в клиентский код или Git.
+Для настройки скопируйте `.env.example` в `.env`. При первом запуске в режиме CSV создаются логины `employee`, `manager`, `hr` и `colleague`. Пароль лежит в `data/demo-accounts.txt`. Его также можно заранее задать через `DEMO_PASSWORD`; существующие пароли это не меняет.
 
-| Что нужно | Где |
-|---|---|
-| Подробный запуск, роли, демонстрация | [docs/RUNBOOK.md](docs/RUNBOOK.md) |
-| Цель, все критерии кейса, проверка и источники Halyk | [docs/CASE1.md](docs/CASE1.md) |
-| Устройство и ограничения | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| Результаты проверок | [docs/QA.md](docs/QA.md) |
-| Исходная спецификация | [docs/TECHNICAL_SPECIFICATION.txt](docs/TECHNICAL_SPECIFICATION.txt) |
-| Исходная схема датасета | [docs/DATASET.md](docs/DATASET.md), [README.ru.md](README.ru.md), [README.kz.md](README.kz.md) |
-| Backend и тесты | [backend/](backend/) |
-| Frontend | [frontend/](frontend/) |
-| Пример переменных окружения | [.env.example](.env.example) |
-| Демонстрационный CSV | [data/demo.csv](data/demo.csv) |
-| Три дополнительных профиля и история | [fixtures/](fixtures/) |
-| Лицензии и происхождение bloub | [third_party/NOTICE.md](third_party/NOTICE.md) |
+Для запуска без ИИ укажите в `.env`:
+
+```dotenv
+AGENT_PROVIDER=off
+EXAM_AI_PROVIDER=off
+```
+
+Для локальной модели выберите `ollama` и задайте `OLLAMA_URL` и `OLLAMA_MODEL`. Для Gemini нужны `GEMINI_API_KEY`, провайдер `gemini` и `ALLOW_EXTERNAL_AI=true`. Внешнюю модель включайте только для данных, которые разрешено передавать. Настройки есть в [.env.example](.env.example), подробности в [документации помощника](docs/AGENT.md) и [курсов](docs/COURSES.md).
+
+## Деплой
+
+Я бы деплоил через Dokploy: в корне уже есть Dockerfile, который собирает сервер и интерфейс в один образ.
+
+1. Подключите репозиторий в Dokploy, выберите сборку через `Dockerfile` и контекст `.`.
+2. Направьте DNS домена `hackathon.wezeso.me` на сервер. В Dokploy добавьте этот домен, порт контейнера `3000` и HTTPS.
+3. Укажите переменные окружения:
+
+   ```dotenv
+   APP_ORIGIN=https://hackathon.wezeso.me
+   COOKIE_SECURE=true
+   AGENT_PROVIDER=off
+   EXAM_AI_PROVIDER=off
+   ALLOW_EXTERNAL_AI=false
+   ```
+
+4. Выберите хранилище. Для CSV задайте `STORAGE_BACKEND=csv`, подключите постоянный том к `/app/data` и оставьте одну реплику с порядком обновления `stop-first`. Для Supabase задайте `STORAGE_BACKEND=supabase` и `DATABASE_URL`. Новую базу сначала заполните SQL-экспортом через `npm run db:export` по [инструкции переноса](docs/SUPABASE.md).
+5. Запустите деплой и проверьте [hackathon.wezeso.me/api/health](https://hackathon.wezeso.me/api/health). После перезапуска данные должны сохраниться.
+
+В этой конфигурации работает расчётный помощник. Для ИИ и проверки экзаменов отдельно подключите модель. Настройки томов, базы и разбор ошибок собраны в [docs/DOKPLOY.md](docs/DOKPLOY.md).
+
+## Проверки и структура
 
 ```sh
 npm test
 npm run build
 ```
 
-Первый запуск преобразует исходные 200 профилей, 40 активностей, 60 навыков, 32 профиля ролей и 2743 записи истории в CSV. Рабочий `data/state.csv` сохраняет также учётные записи, заявки, решения, рекомендации и аудит. Этот файл и локальные пароли исключены из Git. В текущем состоянии сохранены действия браузерной проверки, включая три импортированных профиля.
+Тесты проверяют подбор, права доступа, согласование, начисление навыков, помощника, курсы и календарь. Проверки PostgreSQL включаются отдельно через `TEST_DATABASE_URL` с адресом тестовой базы.
 
-**ИИ:** без GEMINI_API_KEY недоступен. ALLOW_EXTERNAL_AI по умолчанию false: исходный датасет нельзя выносить за контур хакатона. Для разрешённых собственных данных задайте серверный ключ и разрешение в `.env`, затем перезапустите. Положительный контракт модели проверен локальным тестовым сервером; реальный успешный ответ Gemini без ключа не подтверждён.
+| Путь | Что внутри |
+|---|---|
+| `frontend/` | Интерфейс, компоненты и переводы |
+| `backend/` | API, подбор, агент, курсы, хранение данных и тесты |
+| `scripts/` | Запуск, проверки и перенос данных |
+| `data/` | Локальное состояние и SQL для переноса |
+| `fixtures/` | Дополнительные профили для проверки |
+| `docs/` | Документация по функциям и настройке |
+| `public/` | Шапка README |
+| `third_party/` | Лицензии и сведения об использованном коде |
 
-**Границы:** один процесс CSV; сессии сбрасываются при перезапуске; журнал не защищён от администратора файловой системы. Нет MyHalyk/LMS/SSO, банковских операций, уведомлений, календаря, курса внутри приложения или внешней проверки сертификата. HR вручную оценивает текстовое доказательство. Это продуктовая модель, не утверждение об официальном процессе Halyk. Интерфейс русский, каталог исходно английский; полной казахской локализации нет.
-
----
-
-## Original dataset reference
-
-Synthetic data. No real people or companies.
-
-**Snapshot date:** `2026-10-01`. Treat it as "today".
-**History window:** `2024-10-01` – `2026-09-30`.
-
-## Files
-
-| File | Content | Size |
-|---|---|---|
-| `skills.json` | Skill catalog, proficiency scale, role requirements by grade | 60 skills, 8 roles × 4 grades |
-| `employees.json` | Employee profiles | 200 |
-| `events.json` | Development activities catalog | 40 |
-| `activity_history.csv` | Participation log | 2,743 records |
-
-## Relations
-
-```
-employees.skills ─────────────┐
-role_profiles.required_skills ├──> skills.skill_id
-events.develops_skills ───────┤
-events.prerequisites ─────────┘
-employees.(role, grade) ──────> role_profiles.(role, grade)
-employees.manager_id ─────────> employees.employee_id
-activity_history.employee_id ─> employees.employee_id
-activity_history.event_id ────> events.event_id
-```
-
-All references are valid. IDs are unique.
-
-## skills.json
-
-`proficiency_scale` — meaning of levels 0–5. All skill levels in the dataset use this scale.
-
-`skills[]`
-
-| Field | Type | Notes |
-|---|---|---|
-| `skill_id` | string | e.g. `SK_SYSTEM_DESIGN` |
-| `name` | string | |
-| `type` | `hard` \| `soft` | |
-| `category` | string | Grouping for reports |
-| `description` | string | |
-
-`role_profiles[]` — one entry per role and grade.
-
-| Field | Type | Notes |
-|---|---|---|
-| `role` | string | 8 roles |
-| `grade` | `Junior` \| `Middle` \| `Senior` \| `Lead` | In this order |
-| `required_skills` | object | `skill_id → minimum level` for this grade |
-| `critical_skills` | array | Skills that must meet the requirement to hold this grade. Key for promotion |
-
-Requirements never decrease from grade to grade.
-
-## employees.json
-
-| Field | Type | Notes |
-|---|---|---|
-| `employee_id` | string | `E0001` … `E0200` |
-| `full_name` | string | Synthetic |
-| `department` | string | One department per role |
-| `role`, `grade` | string | Match a `role_profiles` entry |
-| `manager_id` | string \| null | A Lead of the same department. `null` for department heads |
-| `hire_date` | date | |
-| `tenure_months` | int | Full months from `hire_date` to snapshot date |
-| `work_format` | `office` \| `hybrid` \| `remote` | |
-| `preferred_language` | `kk` \| `ru` \| `en` | UI language preference |
-| `career_goal` | object \| null | `{target_role, target_grade}`. `null` = no goal set |
-| `skills` | object | `skill_id → level 0–5`. Missing skill = level 0 |
-| `last_review_date` | date | Date of the last skill assessment |
-
-Skill levels reflect the last assessment. Activities completed after `last_review_date` are not yet included.
-
-## events.json
-
-| Field | Type | Notes |
-|---|---|---|
-| `event_id` | string | `EV_001` … `EV_040` |
-| `title`, `description` | string | |
-| `type` | string | `compliance`, `onboarding`, `course`, `workshop`, `mentoring`, `certification`, `meetup` |
-| `format` | `online` \| `offline` \| `self_paced` | |
-| `duration_hours` | number | Total effort |
-| `mandatory` | bool | Assigned by HR. Not a recommendation target |
-| `target_roles`, `target_grades` | array | Who the event is for |
-| `develops_skills` | array | `{skill_id, gain, max_level}`: completion raises the skill by `gain`, but not above `max_level`. Empty for compliance training |
-| `prerequisites` | object | `skill_id → minimum level` needed to join |
-| `upcoming_sessions` | array of dates | Future sessions. Empty for `self_paced` (available any time) |
-
-## activity_history.csv
-
-One row = one employee's participation in one event.
-
-| Column | Type | Notes |
-|---|---|---|
-| `record_id` | string | `R000001` … |
-| `employee_id`, `event_id` | string | |
-| `date` | date | Session date; enrollment or assignment date for self-paced |
-| `due_date` | date \| empty | Mandatory events only |
-| `status` | string | See below |
-| `completion_pct` | int 0–100 | |
-| `score` | int 0–100 \| empty | Final assessment. Courses, certifications and compliance only |
-| `feedback_rating` | int 1–5 \| empty | Employee's rating of the event. Optional |
-| `assigned_by` | `self` \| `manager` \| `hr` | Who initiated participation |
-
-**Statuses**
-
-| Status | Meaning | `completion_pct` |
-|---|---|---|
-| `completed` | Finished | 100 |
-| `in_progress` | Started, not finished yet | 0–95 |
-| `dropped` | Started and abandoned | 5–95 |
-| `no_show` | Registered for a session, did not attend. Scheduled events only | 0 |
-| `declined` | Refused an assignment from manager or HR | 0 |
-| `overdue` | Mandatory event not finished by `due_date` | 0–95 |
-
-Rows are sorted by `date`, `employee_id`, `event_id`.
-
-## Rules
-
-- An event is not repeated after `completed`. Exception: `EV_036` (recurring club).
-- Voluntary events in history always match the employee's role, grade (current or previous) and prerequisites.
-- New employees complete `EV_004` in their first month.
-- Evaluation uses additional employee profiles and history records in the same format. Your solution must be able to load them.
+Проект сделан для демонстрации на хакатоне. Интеграций с MyHalyk, корпоративной LMS и SSO пока нет.

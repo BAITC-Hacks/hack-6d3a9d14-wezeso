@@ -1,0 +1,24 @@
+# Only send application sources and the original dataset to the builder.
+**
+!Dockerfile
+!.dockerignore
+!backend/
+!backend/**
+!frontend/
+!frontend/**
+!scripts/
+!scripts/start-production.mjs
+!third_party/
+!third_party/**
+!employees.json
+!events.json
+!skills.json
+!activity_history.csv
+
+**/node_modules
+**/.next
+**/.next-*
+**/*.tsbuildinfo
+**/.env*
+**/*.log
+backend/careerquest*

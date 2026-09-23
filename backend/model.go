@@ -127,6 +127,12 @@ type State struct {
 	Requests        []Request
 	Audits          []Audit
 	Recommendations []Recommendation
+	AgentRuns       []AgentRun
+	AgentWatches    []AgentWatch
+	Courses         []Course
+	CourseProgress  []CourseProgress
+	CourseUploads   []CourseUpload
+	Exams           []ExamAttempt
 }
 type Gap struct {
 	ID       string `json:"id"`
@@ -355,6 +361,13 @@ func (s *State) candidates(e Employee) []Candidate {
 			c.Score += float64(covered) * weight
 			if gap > 0 && delta > 0 {
 				c.Facts = append(c.Facts, fmt.Sprintf("%s: %d → %d при цели %d; %s", s.skillName(g.Skill), before, before+delta, target.Required[g.Skill], map[bool]string{true: "критичен для цели", false: "навык целевой роли"}[slices.Contains(target.Critical, g.Skill)]))
+			}
+		}
+		if len(c.Facts) == 0 && s.course(ev.ID) != nil {
+			for _, g := range ev.Gains {
+				if c.Gains[g.Skill] > 0 {
+					c.Facts = append(c.Facts, fmt.Sprintf("%s: +%d после успешного экзамена", s.skillName(g.Skill), c.Gains[g.Skill]))
+				}
 			}
 		}
 		if len(c.Facts) == 0 {
