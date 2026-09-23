@@ -1,0 +1,10 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+const source=JSON.parse(readFileSync('employees.json','utf8')).employees.find(e=>e.employee_id==='E0002');
+const profiles=Array.from({length:3},(_,i)=>({...structuredClone(source),employee_id:`JCASE0${i+1}`,full_name:['Demo Critical Gap','Demo Prerequisites','Demo Goal Reached'][i],last_review_date:'2026-09-01'}));
+profiles[0].skills.SK_PUBLIC_SPEAKING=0;profiles[0].skills.SK_SYSTEM_DESIGN=2;
+profiles[1].skills.SK_SYSTEM_DESIGN=0;profiles[1].skills.SK_PYTHON=0;
+Object.keys(profiles[2].skills).forEach(k=>profiles[2].skills[k]=5);
+mkdirSync('fixtures',{recursive:true});
+writeFileSync('fixtures/employees.json',JSON.stringify({meta:{dataset:'Career Quest',version:'1.0',as_of_date:'2026-10-01'},employees:profiles},null,2)+'\n');
+writeFileSync('fixtures/activity_history.csv','record_id,employee_id,event_id,date,due_date,status,completion_pct,score,feedback_rating,assigned_by\n'+[1,2,3].map(i=>`JCASE_R${i},JCASE01,EV_036,2026-09-${10+i},,no_show,0,,,self`).join('\n')+'\n');
+console.log('Created three synthetic counterexample profiles in fixtures/.');

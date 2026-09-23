@@ -1,0 +1,75 @@
+TECHNICAL SPECIFICATION
+ 
+1. General Information
+Client: Halyk Bank of Kazakhstan JSC
+Hackathon: HackAlem AI
+Track: Halyk Bank
+Task name: AI for Corporate Products
+Task type: Product development, AI/LLM engineering, Full-stack
+Tools: Any models and services may be used: cloud and local LLMs, STT, TTS.
+2. Problem
+The company runs two communication streams: internal, with employees, and external, with customers. Both run on outdated logic.
+Internal Loop
+An employee's career consists of dozens of events: onboarding, training, performance reviews, mentoring, rotations. They reach the person as scattered notifications with deadlines. The employee doesn't see a trajectory and doesn't understand what a given activity will give them, so they go through everything as a formality. The company spends its full development budget but gets low program completion rates and weak turnout for voluntary activities.
+External Loop
+Voice bots have learned to speak and listen well. But in most systems, the layer that selects the conversation scenario is still an encoder-based classifier: trained on fixed phrasings and breaking down where natural speech begins, such as a topic change mid-dialogue, a request that falls between two scenarios, or a switch from Russian to Kazakh within a single phrase. Every wrong choice means a transfer to an operator or a lost customer.
+What the two problems have in common: the bottleneck is not the technology but the decision-making layer. In both cases, it can now be built on an LLM that understands context rather than matching phrasings against a training set.
+3. Stakeholders
+Users: company employees; HR specialists and department heads; contact center customers; operators and supervisors.
+Key pain points:
+- How do you explain to an employee why a specific activity matters to them and where it leads?
+- How do you make professional growth visible so that it motivates?
+- How do you teach a bot to understand a customer who speaks naturally?
+- How do you do this without killing speed? A pause longer than one second in a conversation reads as a connection failure.
+4. Case Selection
+- Case 1: Career Quest - an AI navigator for employee development.
+- Case 2: Voice Router - a voice bot with an AI scenario-selection layer
+Cases are judged separately; teams working on different cases are not compared with each other.
+ 
+CASE: CAREER QUEST
+1.  Name. Career Quest - a platform for gamifying the employee lifecycle.
+2.  Problem. A company employee faces a stream of scattered HR events with no visible link to their development. As a result, training is completed as a formality on the deadline day, and voluntary activities have low turnout even though the staff development budget is fully spent.
+3.  User. Primary user: an employee with 1–5 years of tenure.
+Their key scenario: sees their profile and trajectory, receives a recommendation for the next step with an explanation of what it gives them, completes the activity, and sees how their progress has moved.
+Second user: HR — sees which competencies are lagging and who is dropping out of development.
+4.  Task. Develop a web application with an AI layer that, based on the profile, history and requirements of the next grade, selects relevant development steps for the employee and provides a recommendation with a rationale and updated skill progress, and gives HR a view of lagging competencies.
+The core of the task is the quality and explainability of the recommendation, not the interface wrapping. Gamification is an add-on and is not part of the mandatory scope.
+5.  Input → Output. Input: JSON/CSV - profiles, events, history, skills. Example:
+	{
+"employee_id":"E0028",
+"role":"Backend Engineer",
+"grade":"Middle",
+"tenure_months":52,
+"skills": {
+"SK_PYTHON":3,
+"SK_SYSTEM_DESIGN":2,
+"SK_PUBLIC_SPEAKING":2
+}
+}.
+Volume: 200 profiles, 40 events, 60 skills, 24 months of history.
+Output: a profile with a trajectory; 1–3 recommended steps with a rationale ("System Design — 2 vs. the 4 required for Senior; the activity closes the gap, the previous two were completed on time"); progress update after completion; an HR screen.
+Acceptable latency: interface response up to 2 seconds, AI recommendation up to 10 seconds.
+6.  Data.
+Access: starter kit, provided on the day of the hackathon.
+Contents:
+— employees.json — 200 profiles: role, grade, tenure, skills 0–5
+— events.json — 40 events: type, audience, skills developed
+— activity_history.csv — 24 months of participation, including no-shows and refusals
+— skills.json — 60 hard/soft skills, requirements by grade
+Constraints: the data is synthetic and may not be taken outside the hackathon. Extending it with your own data is allowed as long as the schema is preserved. The skill growth rule is defined in the dataset: each activity in events.json specifies which skills it develops, by how many levels (gain) and up to what maximum (max_level). Details are in the starter kit README. The data is in English, with translations into Kazakh and Russian.
+7.  Must-have
+Test profiles. The jury uses three profiles, the same for all teams, designed so that a single-factor rule gets them wrong. Example: an employee's lowest skill is Public Speaking, but their history shows they skipped similar activities three times, while System Design is critical for moving to the next grade. A "pick the lowest skill" recommendation misses on such a profile. The solution must be able to load additional profiles and history in the dataset format: at the defense, the jury uploads the test profiles.
+8.  Optional. Internal currency and recognition; a rewards catalog and point redemption; peer recognition; mentoring and team mechanics; personal challenges; an event builder for HR; attrition risk prediction; an extended HR dashboard; grade transition modeling; integration with a messenger or calendar; mobile adaptation; high-quality interface localization into Kazakh and Russian.
+9. Constraints.
+Not allowed: a recommendation based on a single profile field passed off as AI — the rationale must rely on several factors. Public employee performance rankings: they motivate a small group of leaders and demotivate the majority, who see an unreachable gap. Mechanics around mandatory processes, such as points for timesheets. Real personal data.
+Take into account:
+— Privacy: internal loop; engagement data is not visible to other employees without consent
+— Security: separation of employee/HR permissions
+— Explainability: it is visible why a step was suggested and how progress is calculated
+— Infrastructure: launch with a single command
+— Voluntariness: coercion is the main predictor of failure for such programs
+ 
+10. Deliverables. Repository: yes. README: yes.
+
+
+  
