@@ -1,0 +1,26 @@
+.card { display: flex; flex-direction: column; min-width: 0; border: 1px solid #e1e3de; border-radius: 24px; overflow: hidden; background: #fff; transition: none; }
+.card:hover,.card:focus-within { border-color: #aeb9b0; }
+.body { display: flex; flex-direction: column; flex: 1; padding: 24px 24px 20px; min-width: 0; }
+.type { color: #747a71; font-size: 12px; }
+.card .title { color: #222720; font-size: 19px; font-weight: 500; line-height: 1.45; letter-spacing: -.5px; margin: 10px 0 12px; min-height: 55px; overflow-wrap: anywhere; }
+.metadata { color: #686f64; font-size: 12px; }
+.card .details { padding-top: 14px; margin-top: auto; }
+.card .details summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 400; color: #6e756b; min-height: 30px; list-style: none; }
+.details summary::-webkit-details-marker { display: none; }
+.card .details summary::before { content: none; }
+.details summary:hover { color: #202820; }
+.details[open] summary svg { transform: rotate(180deg); }
+.description { padding: 8px 0 13px; }
+.description p,.description li { font-size: 13px; line-height: 1.7; color: #5f675c; overflow-wrap: anywhere; }
+.description ul { list-style: disc; padding-left: 18px; margin-top: 10px; }
+.description li + li { margin-top: 6px; }
+.actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 17px; flex-wrap: wrap; }
+.actions button { font-size: 12px; }
+.actions button:last-child:not(:first-child) { color: #6c7366; }
+.art { position: relative; height: 118px; width: 100%; flex-shrink: 0; overflow: hidden; pointer-events: none; }
+.art > svg { display: block; width: 100%; height: 100%; }
+.art > svg:last-child { position: absolute; inset: 0; }
+.blocked { opacity: .8; }
+.blockedReason { font-size: 12px; color: #696f63; line-height: 1.6; margin-top: 14px; }
+@media(max-width:720px) { .body { padding: 24px; }.card .title { min-height: 0; font-size: 21px; }.art { height: 125px; } }
+@media(prefers-reduced-motion:reduce) { .card { transition: none; } }

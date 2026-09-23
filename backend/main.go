@@ -10,9 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -76,14 +74,29 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
 	if path == "health" && r.Method == "GET" {
-		send(w, 200, map[string]any{"ok": true, "model": "gemini-3.8-flash", "snapshot": snapshot})
+		storage := "csv"
+		if a.Store.DB != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+			defer cancel()
+			var ready bool
+			if err := a.Store.DB.QueryRow(ctx, "SELECT ready FROM career_quest.store_meta WHERE id = 1 AND schema_version = 1").Scan(&ready); err != nil || !ready {
+				problem(w, fail(503, "База данных недоступна или не подготовлена"))
+				return
+			}
+			storage = "supabase"
+		}
+		send(w, 200, map[string]any{"ok": true, "storage": storage, "model": "gemini-3.8-flash", "snapshot": snapshot})
 		return
 	}
 	if path == "login" && r.Method == "POST" {
 		a.login(w, r)
 		return
 	}
-	session, ok := a.Auth.session(r)
+	session, ok, sessionErr := a.Auth.session(r)
+	if sessionErr != nil {
+		problem(w, fail(503, "База данных сессий недоступна"))
+		return
+	}
 	if !ok {
 		problem(w, fail(401, "Войдите в учётную запись"))
 		return
@@ -98,7 +111,10 @@ func (a *API) handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if path == "logout" && r.Method == "POST" {
-		a.Auth.logout(w, r, a.Secure)
+		if err := a.Auth.logout(w, r, a.Secure); err != nil {
+			problem(w, err)
+			return
+		}
 		send(w, 200, map[string]bool{"ok": true})
 		return
 	}
@@ -358,27 +374,27 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
-	a.Auth.mu.Lock()
-	attempt := a.Auth.Attempts[host]
-	if time.Now().After(attempt.Until) {
-		attempt = Attempt{Until: time.Now().Add(5 * time.Minute)}
+	allowed, err := a.Auth.attempt(r.Context(), host)
+	if err != nil {
+		problem(w, err)
+		return
 	}
-	attempt.Count++
-	a.Auth.Attempts[host] = attempt
-	a.Auth.mu.Unlock()
-	if attempt.Count > 15 {
+	if !allowed {
 		problem(w, fail(429, "Слишком много попыток. Повторите через 5 минут"))
 		return
 	}
-	a.Store.mu.Lock()
+	state, err := a.Store.read(r.Context())
+	if err != nil {
+		problem(w, err)
+		return
+	}
 	var found *User
-	for _, u := range a.Store.State.Users {
+	for _, u := range state.Users {
 		if u.Login == strings.ToLower(strings.TrimSpace(in.Login)) {
 			v := u
 			found = &v
 		}
 	}
-	a.Store.mu.Unlock()
 	hash := a.Auth.DummyHash
 	if found != nil {
 		hash = found.Hash
@@ -388,16 +404,24 @@ func (a *API) login(w http.ResponseWriter, r *http.Request) {
 		problem(w, fail(401, "Неверный логин или пароль"))
 		return
 	}
-	s := a.Auth.issue(w, *found, a.Secure)
-	a.Auth.mu.Lock()
-	delete(a.Auth.Attempts, host)
-	a.Auth.mu.Unlock()
+	if err := a.Auth.clearAttempts(r.Context(), host); err != nil {
+		problem(w, err)
+		return
+	}
+	s, err := a.Auth.issue(w, *found, a.Secure)
+	if err != nil {
+		problem(w, err)
+		return
+	}
 	send(w, 200, map[string]any{"user": publicUser(*found), "csrf": s.CSRF})
 }
 func (a *API) workspace(w http.ResponseWriter, r *http.Request, u User) {
-	a.Store.mu.Lock()
-	defer a.Store.mu.Unlock()
-	s := &a.Store.State
+	state, err := a.Store.read(r.Context())
+	if err != nil {
+		problem(w, fail(503, "База данных недоступна"))
+		return
+	}
+	s := &state
 	empID := r.URL.Query().Get("employee")
 	if empID == "" {
 		empID = u.Employee
@@ -488,52 +512,27 @@ func env(key, fallback string) string {
 	return fallback
 }
 func main() {
-	dir := env("DATA_DIR", "data")
-	if e := os.MkdirAll(dir, 0700); e != nil {
-		log.Fatal(e)
-	}
-	lock := filepath.Join(dir, "state.lock")
-	lf, e := os.OpenFile(lock, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-	if e != nil {
-		log.Fatal("CSV-хранилище занято или остался state.lock после сбоя. Убедитесь, что другого процесса нет, затем удалите lock: ", e)
-	}
-	_, _ = fmt.Fprint(lf, os.Getpid())
-	_ = lf.Close()
-	defer os.Remove(lock)
-	st := &Store{Dir: dir}
-	st.State, e = loadRows(filepath.Join(dir, "state.csv"))
-	if os.IsNotExist(e) {
-		st.State, e = seed(env("DATASET_DIR", "."))
-		if e != nil {
-			log.Print(e)
-			return
-		}
-		if e = writeRows(filepath.Join(dir, "demo.csv"), st.State); e != nil {
-			log.Print(e)
-			return
-		}
-		pass := os.Getenv("DEMO_PASSWORD")
-		if pass == "" {
-			pass = "Quest-" + uid("")[:18]
-		}
-		hash, err := hashPassword(pass)
+	if handled, err := databaseCommand(); handled {
 		if err != nil {
 			log.Print(err)
-			return
+			os.Exit(1)
 		}
-		st.State.Users = []User{{"U_employee", "employee", hash, "employee", "E0002"}, {"U_manager", "manager", hash, "manager", "E0175"}, {"U_hr", "hr", hash, "hr", ""}, {"U_other", "colleague", hash, "employee", "E0001"}}
-		if err = os.WriteFile(filepath.Join(dir, "demo-accounts.txt"), []byte("Локальные демо-аккаунты (не добавлять в git)\nЛогины: employee, manager, hr, colleague\nПароль: "+pass+"\n"), 0600); err != nil {
-			log.Print(err)
-			return
-		}
-		e = writeRows(filepath.Join(dir, "state.csv"), st.State)
-	}
-	if e != nil {
-		log.Print(e)
 		return
 	}
+	if err := runServer(); err != nil {
+		log.Print(err)
+		os.Exit(1)
+	}
+}
+
+func runServer() error {
+	st, closeStore, err := openStore()
+	if err != nil {
+		return err
+	}
+	defer closeStore()
 	dummy, _ := hashPassword(uid(""))
-	auth := &Auth{Sessions: map[string]Session{}, Attempts: map[string]Attempt{}, DummyHash: dummy}
+	auth := &Auth{Sessions: map[string]Session{}, Attempts: map[string]Attempt{}, DummyHash: dummy, DB: st.DB}
 	a := &API{Store: st, Auth: auth, Origin: env("APP_ORIGIN", "http://localhost:3000"), Secure: os.Getenv("COOKIE_SECURE") == "true", AIKey: os.Getenv("GEMINI_API_KEY"), AllowAI: os.Getenv("ALLOW_EXTERNAL_AI") == "true", AIURL: "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", AIClient: &http.Client{Timeout: 9 * time.Second}}
 	server := &http.Server{Addr: "127.0.0.1:" + env("PORT", "8080"), Handler: http.HandlerFunc(a.handler), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second}
 	signals := make(chan os.Signal, 1)
@@ -544,8 +543,13 @@ func main() {
 		defer cancel()
 		_ = server.Shutdown(ctx)
 	}()
-	log.Printf("Career Quest API: %s · CSV records: %s · credentials: %s", server.Addr, strconv.Itoa(len(st.State.History)), filepath.Join(dir, "demo-accounts.txt"))
-	if e = server.ListenAndServe(); e != nil && e != http.ErrServerClosed {
-		log.Print(e)
+	storage := "CSV"
+	if st.DB != nil {
+		storage = "Supabase PostgreSQL"
 	}
+	log.Printf("Career Quest API: %s · storage: %s · history records: %d", server.Addr, storage, len(st.State.History))
+	if err = server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return err
+	}
+	return nil
 }

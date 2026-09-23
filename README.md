@@ -1,5 +1,7 @@
 # Halyk · Career Quest
 
+**Supabase:** приложение теперь по умолчанию хранит данные в локальном Supabase PostgreSQL. Перед запуском выполните `npm run db:export`, примените `data/supabase-migration.sql` и задайте серверный `DATABASE_URL` в `.env`. Подробная инструкция: [docs/SUPABASE.md](docs/SUPABASE.md). Существующие логины и пароли сохраняются. Приведённые ниже сведения о CSV описывают прежний режим, доступный явно через `STORAGE_BACKEND=csv`.
+
 Рабочий локальный прототип Case 1: профиль → объяснимый выбор активности → руководитель → результат сотрудника → проверка HR → рост навыков. Go + Next.js / TypeScript, Kumo UI, CSV, серверный Gemini 3.8 Flash, React-адаптация bloub.
 
 ```sh

@@ -1,5 +1,5 @@
 {
   "name": "halyk-career-quest",
   "private": true,
-  "scripts": {"start": "node scripts/start.mjs", "test": "node scripts/test.mjs", "build": "npm --prefix frontend run build"}
+  "scripts": {"start": "node scripts/start.mjs", "test": "node scripts/test.mjs", "build": "npm --prefix frontend run build", "db:export": "node scripts/db.mjs export", "db:import": "node scripts/db.mjs import"}
 }

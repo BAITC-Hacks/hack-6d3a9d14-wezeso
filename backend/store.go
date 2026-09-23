@@ -12,12 +12,15 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Store struct {
 	mu    sync.Mutex
 	State State
 	Dir   string
+	DB    *pgxpool.Pool
 }
 
 func readJSON(path string, out any) error {
@@ -230,6 +233,9 @@ func loadRows(path string) (State, error) {
 func (st *Store) transact(fn func(*State) error) error {
 	st.mu.Lock()
 	defer st.mu.Unlock()
+	if st.DB != nil {
+		return st.transactPostgres(fn)
+	}
 	next := clone(st.State)
 	if err := fn(&next); err != nil {
 		return err

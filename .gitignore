@@ -6,6 +6,7 @@ node_modules/
 data/state.csv
 data/state.lock
 data/demo-accounts.txt
+data/*migration*.sql
 data/*.tmp
 backend/careerquest*
 artifacts/

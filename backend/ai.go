@@ -57,25 +57,27 @@ func (a *API) recommend(w http.ResponseWriter, r *http.Request, u User) {
 		problem(w, fail(400, "Подтвердите отправку обезличенного контекста в Gemini"))
 		return
 	}
-	a.Store.mu.Lock()
-	e := a.Store.State.employee(u.Employee)
+	state, err := a.Store.read(r.Context())
+	if err != nil {
+		problem(w, err)
+		return
+	}
+	e := state.employee(u.Employee)
 	if e == nil || u.Role == "hr" {
-		a.Store.mu.Unlock()
 		problem(w, fail(403, "Рекомендация доступна сотруднику для своего профиля"))
 		return
 	}
-	candidates := a.Store.State.candidates(*e)
+	candidates := state.candidates(*e)
 	allowed := []Candidate{}
 	for _, c := range candidates {
 		if c.Blocked == "" {
 			allowed = append(allowed, c)
 		}
 	}
-	target := a.Store.State.target(*e)
-	levels := a.Store.State.effective(*e)
+	target := state.target(*e)
+	levels := state.effective(*e)
 	contextData := map[string]any{"role": e.Role, "grade": e.Grade, "tenure_months": e.Tenure, "work_format": e.Format, "target": target, "verified_levels": levels, "candidates": allowed}
 	empID := e.ID
-	a.Store.mu.Unlock()
 	if len(allowed) == 0 {
 		problem(w, fail(409, "Нет доступных активностей для этой цели"))
 		return
