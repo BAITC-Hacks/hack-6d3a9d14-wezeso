@@ -1,0 +1,45 @@
+{
+  "name": "qadam-career-quest",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env server/index.js",
+    "start": "node scripts/start.mjs",
+    "build": "vite build",
+    "serve": "node --env-file-if-exists=.env server/index.js --production",
+    "test": "node --test tests/*.test.js",
+    "db:seed": "node --env-file-if-exists=.env scripts/seed.mjs",
+    "db:user": "node --env-file-if-exists=.env scripts/create-user.mjs",
+    "check": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "@dicebear/core": "^9.2.4",
+    "@dicebear/pixel-art": "^9.2.4",
+    "@fontsource-variable/manrope": "^5.2.8",
+    "@radix-ui/react-avatar": "^1.2.6",
+    "@radix-ui/react-dialog": "^1.1.23",
+    "@radix-ui/react-label": "^2.1.15",
+    "@radix-ui/react-slot": "^1.3.3",
+    "@radix-ui/react-tabs": "^1.1.21",
+    "@supabase/supabase-js": "^2.57.4",
+    "@tailwindcss/vite": "^4.3.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "csv-parse": "^6.1.0",
+    "express": "^5.1.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.3",
+    "vite": "^7.1.7"
+  }
+}
