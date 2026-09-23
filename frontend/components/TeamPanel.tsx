@@ -106,8 +106,8 @@ export default function TeamPanel({ data, dept, setDept, search, setSearch, onQu
         <Table.Header><Table.Row><Table.Head>{t("Сотрудник")}</Table.Head><Table.Head>{t("Роль и грейд")}</Table.Head><Table.Head>{t("Участие за 90 дней")}</Table.Head><Table.Head>{t("Профиль")}</Table.Head></Table.Row></Table.Header>
         <Table.Body>{roster.map(person => <Table.Row key={person.employee_id}>
           <Table.Cell><div className="roster-person"><Avatar identity={person.employee_id} label={t("Персонаж {0}", { 0: person.full_name })} size={46} animated={false} /><div><b>{person.full_name}</b><small>{t(person.department)}</small></div></div></Table.Cell>
-          <Table.Cell>{t(person.role)}<small>{t(person.grade)}</small></Table.Cell>
-          <Table.Cell>{count("activity",person.recent)}<small>{person.skips}  {t("отказов / пропусков")}</small></Table.Cell>
+          <Table.Cell data-label={t("Роль и грейд")}>{t(person.role)}<small>{t(person.grade)}</small></Table.Cell>
+          <Table.Cell data-label={t("Участие за 90 дней")}>{count("activity",person.recent)}<small>{person.skips}  {t("отказов / пропусков")}</small></Table.Cell>
           <Table.Cell><Btn variant="ghost" className="text-link" onClick={() => setFocus(person)}>{t("Навыки")}<ArrowUpRight size={17} /></Btn></Table.Cell>
         </Table.Row>)}</Table.Body>
       </Table>

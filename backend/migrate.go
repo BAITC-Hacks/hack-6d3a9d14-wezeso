@@ -26,6 +26,9 @@ var agentSchemaSQL string
 //go:embed migrations/003_courses.sql
 var courseSchemaSQL string
 
+//go:embed migrations/verify.sql
+var deploymentVerificationSQL string
+
 func dollarQuote(value string) string {
 	tag := "$cq$"
 	for strings.Contains(value, tag) {
@@ -90,6 +93,7 @@ func databaseCommand() (bool, error) {
 	flags := flag.NewFlagSet("careerquest", flag.ContinueOnError)
 	exportPath := flags.String("export-sql", "", "write schema and all local data as SQL")
 	importPath := flags.String("import-sql", "", "apply the generated SQL to DATABASE_URL")
+	verify := flags.Bool("verify-db", false, "verify the deployed schema, data, and private access")
 	source := flags.String("source", filepath.Join(env("DATA_DIR", "data"), "state.csv"), "source state.csv")
 	fromDataset := flags.Bool("from-dataset", false, "initialize a fresh DATA_DIR from original dataset before exporting")
 	if len(os.Args) == 1 {
@@ -98,8 +102,14 @@ func databaseCommand() (bool, error) {
 	if err := flags.Parse(os.Args[1:]); err != nil {
 		return true, err
 	}
-	if (*exportPath == "") == (*importPath == "") {
-		return true, errors.New("specify exactly one of --export-sql or --import-sql")
+	commands := 0
+	for _, selected := range []bool{*exportPath != "", *importPath != "", *verify} {
+		if selected {
+			commands++
+		}
+	}
+	if commands != 1 {
+		return true, errors.New("specify exactly one of --export-sql, --import-sql or --verify-db")
 	}
 	if *exportPath != "" {
 		var s State
@@ -155,11 +165,15 @@ func databaseCommand() (bool, error) {
 		return true, nil
 	}
 	if os.Getenv("DATABASE_URL") == "" {
-		return true, errors.New("set DATABASE_URL in .env before importing")
+		return true, errors.New("set DATABASE_URL in .env before importing or verifying")
 	}
-	sql, err := os.ReadFile(*importPath)
-	if err != nil {
-		return true, err
+	var sql []byte
+	var err error
+	if !*verify {
+		sql, err = os.ReadFile(*importPath)
+		if err != nil {
+			return true, err
+		}
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -168,6 +182,30 @@ func databaseCommand() (bool, error) {
 		return true, err
 	}
 	defer db.Close()
+	if *verify {
+		// No startup migrations, seeds, sessions or other writes during verification.
+		tx, err := db.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+		if err != nil {
+			return true, err
+		}
+		defer tx.Rollback(context.Background())
+		if _, err = tx.Exec(ctx, deploymentVerificationSQL, pgx.QueryExecModeSimpleProtocol); err != nil {
+			return true, fmt.Errorf("database verification failed: %w", err)
+		}
+		state, err := loadPostgres(ctx, tx)
+		if err != nil {
+			return true, fmt.Errorf("database does not match the application model: %w", err)
+		}
+		if err = tx.Commit(ctx); err != nil {
+			return true, err
+		}
+		fmt.Println("Supabase verification passed: schema, required data, RLS, private grants and application model.")
+		for _, t := range entityTables {
+			rows, _ := tableRows(state, t)
+			fmt.Printf("  %s: %d\n", t.table, len(rows))
+		}
+		return true, nil
+	}
 	// Simple protocol permits the SQL editor-compatible multi-statement file.
 	_, err = db.Exec(ctx, string(sql), pgx.QueryExecModeSimpleProtocol)
 	if err != nil {

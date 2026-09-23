@@ -5,7 +5,7 @@
 .layout :is(button, input, textarea) { font-family: inherit; }
 .layout :is(button, a) > svg { flex-shrink: 0; }
 .layout :is(b, strong) { font-weight: 600; }
-.layout summary::before { content: none; }
+.layout details > summary::before, .layout details[open] > summary::before { content: none; }
 .layout summary { color: var(--text); font-weight: 500; }
 .layout summary > svg { flex-shrink: 0; color: var(--muted); }
 .layout details[open] > summary > svg { transform: rotate(90deg); }
@@ -27,7 +27,9 @@
 .intro { margin-bottom: 20px; }
 .layout .intro h2, .layout .result h2, .layout .empty h2 { font-size: var(--type-section); line-height: var(--leading-heading); font-weight: 600; letter-spacing: -.02em; }
 .intro p { color: var(--muted); margin-top: 6px; }
-.composer form { display: grid; gap: 16px; }
+.composer form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.composer form > * { min-width: 0; }
+.composer textarea { min-width: 0; width: 100%; }
 .presets { display: flex; flex-wrap: wrap; gap: 8px; }
 .presets button { font-size: var(--type-meta); }
 .constraints { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); gap: 12px; margin: 4px 0 0; border: 0; padding: 0; min-width: 0; }
@@ -96,7 +98,7 @@
 .empty p { max-width: 650px; }
 .empty > div { display: flex; gap: 24px; flex-wrap: wrap; font-size: var(--type-meta); margin-top: 24px; }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .constraints { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .artifacts { grid-template-columns: 1fr; }
   .artifacts a { border-left: 0; border-top: 1px solid var(--border); }
@@ -104,7 +106,7 @@
   .artifacts a:last-child { border-radius: 0 0 6px 6px; }
   .metrics > div { padding-inline: 16px; }
 }
-@media (max-width: 650px) {
+@container (max-width: 650px) {
   .layout { gap: 16px; }
   .autopilot { padding: 16px; flex-direction: column; gap: 12px; }
   .composer { padding: 0 16px; }
@@ -121,7 +123,7 @@
   .stepBody { margin-left: 0; }
   .presets button { max-width: 100%; min-height: 36px; height: auto; white-space: normal; }
 }
-@media (max-width: 380px) {
+@container (max-width: 380px) {
   .constraints { grid-template-columns: 1fr; }
   .launch button, .actions button { width: 100%; }
   .empty > div { gap: 10px; flex-direction: column; }

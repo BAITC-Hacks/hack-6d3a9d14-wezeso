@@ -32,12 +32,12 @@ export default function CharacterCard({ data, onQuest }: { data: Workspace; onQu
     <div className="character-story">
       <h2>{t(character.name)}<span>{t("Блоб")} {firstName}</span></h2>
       <p className="character-class">{t(data.profile?.role || roleName[data.user.role])}</p>
-      <div className="character-xp-label"><b>{progress.xp} XP</b><span>{progress.levelXP} / {progress.nextLevelXP}  {t("до уровня")} {progress.level + 1}</span></div>
+      <div className="character-xp-label"><b>{number(progress.xp)} XP</b><span>{progress.levelXP} / {progress.nextLevelXP}  {t("до уровня")} {progress.level + 1}</span></div>
       <div className="character-xp" role="progressbar" aria-label={t("Опыт до следующего уровня персонажа")} aria-valuemin={0} aria-valuemax={progress.nextLevelXP} aria-valuenow={progress.levelXP}><span style={{ width: `${progress.levelXP / progress.nextLevelXP * 100}%` }}/></div>
       <p className="character-xp-note"><CheckCircle size={15}/>{progress.completed}  {t("завершено")}</p>
     </div>
     <div className="character-quest">
-      <h3>{quest || (data.user.role === 'hr' ? t("Заявки команды") : t("Выберите активность"))}</h3>
+      <h3>{t(quest) || (data.user.role === 'hr' ? t("Заявки команды") : t("Выберите активность"))}</h3>
       {active && <Status status={active.status}/>}
       <Btn variant="ghost" type="button" className="text-link" onClick={onQuest}>{active ? t("Открыть мои шаги") : data.user.role === 'hr' ? t("К заявкам команды") : t("Выбрать квест")}<ArrowRight size={17}/></Btn>
     </div>

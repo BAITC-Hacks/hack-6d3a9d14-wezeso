@@ -10,6 +10,7 @@ import './globals.css';
 import './workspace.css';
 import './states.css';
 import './pixel-workspace.css';
+import './responsive.css';
 async function requestLocale() {
   const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
   return detectLocale(cookieStore.get(localeCookie)?.value, requestHeaders.get('accept-language') || '');

@@ -43,6 +43,17 @@ export default function App(){
  const[sessionError,setSessionError]=useState('');const[workspaceError,setWorkspaceError]=useState('');const[signingOut,setSigningOut]=useState(false);const workspaceRequest=useRef(0);
  useEffect(()=>{try{setSidebarCollapsed(localStorage.getItem('career-quest-sidebar-collapsed')==='true');}catch{}},[]);
  function toggleSidebar(){const next=!sidebarCollapsed;setSidebarCollapsed(next);try{localStorage.setItem('career-quest-sidebar-collapsed',String(next));}catch{}}
+ useEffect(()=>{
+  const revealActiveLink=()=>{
+   if(!window.matchMedia('(max-width: 720px)').matches)return;
+   const nav=document.getElementById('sidebar-navigation');
+   const link=nav?.querySelector<HTMLElement>('[aria-current="page"]');
+   if(nav&&link)nav.scrollTo({left:link.offsetLeft-nav.offsetLeft-(nav.clientWidth-link.offsetWidth)/2});
+  };
+  revealActiveLink();
+  window.addEventListener('resize',revealActiveLink);
+  return()=>window.removeEventListener('resize',revealActiveLink);
+ },[view,user]);
  const call=useCallback(async(path:string,payload?:unknown)=>{try{return await requestJSON(path,{method:payload===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:payload===undefined?undefined:JSON.stringify(payload)});}catch(e){if(e instanceof ApiError&&e.status===401&&path!=='login'){workspaceRequest.current++;setUser(null);setData(null);setCSRF('');setModal(null);setRefreshing(false);setError('Сессия завершилась. Войдите снова, чтобы продолжить.');}throw e;}},[csrf]);
  const refresh=useCallback(async()=>{const id=++workspaceRequest.current;setRefreshing(true);setWorkspaceError('');try{const next=await call('workspace');if(id===workspaceRequest.current)setData(next);}catch(e){if(id===workspaceRequest.current)setWorkspaceError((e as Error).message);}finally{if(id===workspaceRequest.current)setRefreshing(false);}},[call]);
  const checkSession=useCallback(async(signal?:AbortSignal)=>{setLoading(true);setSessionError('');try{const s=await requestJSON('session',{signal});if(signal?.aborted)return;setUser(s.user);setCSRF(s.csrf);setView(savedView(s.user));}catch(e){if(signal?.aborted)return;if(!(e instanceof ApiError&&e.status===401))setSessionError((e as Error).message);}finally{if(!signal?.aborted)setLoading(false);}},[]);

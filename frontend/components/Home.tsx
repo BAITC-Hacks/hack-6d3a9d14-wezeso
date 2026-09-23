@@ -47,12 +47,12 @@ export default function Home({ data, goalControl, onCatalog, onRequests, onHisto
 	const agentPlan = data.agent_runs?.filter(r => r.trigger === 'autopilot').at(-1);
 	const agentStep = agentPlan?.steps[0];
 
-  return <div className={styles.home}><section className={styles.agentLaunch} aria-label={t("Рекомендация агента")}><div><span><b>{agentStep ? t("Следующий шаг: {0}", { 0: agentStep.title }) : data.agent_watch?.enabled ? t("Агент анализирует вашу траекторию") : t("Помощник развития")}</b><small>{agentStep ? agentStep.facts[0] : agentPlan?.summary || t("Автоматические рекомендации по цели, истории и нагрузке.")}</small>{agentPlan&&<small>{agentPlan.mode==='llm'?t("Рекомендовано ИИ"):t("Расчётный план · LLM недоступна")} · {agentPlan.progress_before}% → {agentPlan.progress_after}{t("% после проверки HR")}</small>}</span></div><Btn variant="primary" onClick={onAgent}>{agentPlan?t("Посмотреть план"):t("Открыть помощника")}<ArrowRight size={17}/></Btn></section>
+  return <div className={styles.home}><section className={styles.agentLaunch} aria-label={t("Рекомендация агента")}><div><span><b>{agentStep ? t("Следующий шаг: {0}", { 0: agentStep.title }) : data.agent_watch?.enabled ? t("Агент анализирует вашу траекторию") : t("Помощник развития")}</b><small>{agentStep ? t(agentStep.facts[0]) : t(agentPlan?.summary) || t("Автоматические рекомендации по цели, истории и нагрузке.")}</small>{agentPlan&&<small>{agentPlan.mode==='llm'?t("Рекомендовано ИИ"):t("Расчётный план · LLM недоступна")} · {agentPlan.progress_before}% → {agentPlan.progress_after}{t("% после проверки HR")}</small>}</span></div><Btn variant="primary" onClick={onAgent}>{agentPlan?t("Посмотреть план"):t("Открыть помощника")}<ArrowRight size={17}/></Btn></section>
     <section className={styles.hero} aria-label={t("Ваш персонаж и следующий шаг")}>
       <div className={styles.character}>
         <div className={styles.blobStage}><Avatar identity={identity} size={440} label={t("Ваш блоб {0}", { 0: character.name })}/></div>
         <div className={styles.characterCaption}><strong>{t(character.name)}</strong><span>{t("Уровень")} {progress.level}</span></div>
-        <div className={styles.xp}><Progress value={progress.levelXP / progress.nextLevelXP * 100} label={t("Опыт до следующего уровня персонажа")}/><span>{progress.xp} XP</span></div>
+        <div className={styles.xp}><Progress value={progress.levelXP / progress.nextLevelXP * 100} label={t("Опыт до следующего уровня персонажа")}/><span>{number(progress.xp)} XP</span></div>
       </div>
       <div className={styles.intro}>
         <h1>{t("Привет,")} {profile.full_name.split(' ')[0]}.</h1>

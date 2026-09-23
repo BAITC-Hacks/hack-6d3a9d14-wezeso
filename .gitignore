@@ -9,6 +9,7 @@ data/state.lock
 data/demo-accounts.txt
 data/*migration*.sql
 data/*.tmp
+data/bootstrap/
 backend/careerquest*
 artifacts/
 *.log

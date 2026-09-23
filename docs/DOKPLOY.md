@@ -59,16 +59,11 @@ The first startup seeds the supplied original dataset. Logins are `employee`, `m
 
 ## AI configuration
 
-The image defaults to calculated recommendations with AI providers off. Free-text exam grading needs an AI provider. For Ollama, run it separately on the server and configure a reachable service URL, for example:
+The image defaults to calculated recommendations with AI providers off. Free-text exam grading needs an AI provider.
 
-```dotenv
-AGENT_PROVIDER=ollama
-EXAM_AI_PROVIDER=ollama
-OLLAMA_URL=http://ollama:11434/api/chat
-OLLAMA_MODEL=qwen3:4b
-```
+The current Go implementation accepts **only loopback URLs for Ollama**. This image does not include Ollama. A normal separate service URL such as `http://ollama:11434/api/chat` will be rejected, and `127.0.0.1` cannot reach your laptop or another container. To retain local Ollama, use a separate deployment arrangement that shares the application's network namespace (for example, a Docker Compose sidecar with `network_mode: service:app`), with the model already installed. Then set `AGENT_PROVIDER=ollama`, `EXAM_AI_PROVIDER=ollama`, `OLLAMA_URL=http://127.0.0.1:11434/api/chat`, and `OLLAMA_MODEL=qwen3:4b`.
 
-The `ollama` example hostname works only when the app and Ollama share a Docker network with that service name, and the model must be pulled into Ollama first. `127.0.0.1:11434` inside this app container cannot reach a separate Ollama service or your laptop. For external Gemini, follow [AGENT.md](AGENT.md) and [COURSES.md](COURSES.md); the supplied dataset's existing external-transmission restriction still applies.
+For external Gemini, follow [AGENT.md](AGENT.md) and [COURSES.md](COURSES.md); the supplied dataset's existing external-transmission restriction still applies. For data you are authorized to send externally, set `AGENT_PROVIDER=gemini`, `EXAM_AI_PROVIDER=gemini`, `GEMINI_API_KEY`, and `ALLOW_EXTERNAL_AI=true` in runtime environment variables.
 
 ## Verify and troubleshoot
 

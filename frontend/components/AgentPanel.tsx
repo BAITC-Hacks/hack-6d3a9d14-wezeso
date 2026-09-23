@@ -83,7 +83,7 @@ export default function AgentPanel({data,call,refresh,onRequests}:Props) {
     {error&&<p className="error" role="alert">{t(error)}</p>}
    </form>
   </section></details>
-  {runs.length>1&&<div className={styles.history}><Choice label={t("Сохранённые планы")} value={run?.id||runs.at(-1)!.id} disabled={busy} onValueChange={id=>{setSelected(id);setResponse(null);}} options={[...runs].reverse().map(r=>({value:r.id,label:t("{0} · {1} · {2}", { 0: new Date(r.created_at).toLocaleTimeString(languageTag,{hour:'2-digit',minute:'2-digit'}), 1: runStatuses[r.status], 2: count("step", r.steps.length) })}))}/></div>}
+  {runs.length>1&&<div className={styles.history}><Choice label={t("Сохранённые планы")} value={run?.id||runs.at(-1)!.id} disabled={busy} onValueChange={id=>{setSelected(id);setResponse(null);}} options={[...runs].reverse().map(r=>({value:r.id,label:t("{0} · {1} · {2}", { 0: new Date(r.created_at).toLocaleTimeString(languageTag,{hour:'2-digit',minute:'2-digit',hour12:false}), 1: runStatuses[r.status], 2: count("step", r.steps.length) })}))}/></div>}
   {run?<section ref={resultRef} className={styles.result} aria-label={t("Результат работы агента")} tabIndex={-1}>
    <div className={styles.resultHeading}><div><h2>{t(run.target.target_grade)} {t(run.target.target_role)}</h2><AppBadge tone={run.mode==='llm'?'green':'orange'} icon={run.mode==='llm'?Sparkle:ListChecks}>{run.mode==='llm'?t("LLM + инструменты"):t("Расчётный план · без LLM")}</AppBadge></div><span className={styles.hint}>{t(runStatuses[run.status])} · {number(run.duration_ms/1000,{minimumFractionDigits:1,maximumFractionDigits:1})}  {t("с")}</span></div>
    <p>{t(run.summary)}</p>

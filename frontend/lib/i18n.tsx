@@ -20,7 +20,7 @@ export function LanguageProvider({ initialLocale, children }: { initialLocale: L
     if (!isLocale(next)) return;
     updateLocale(next);
     try { localStorage.setItem(localeCookie, next); } catch { /* Storage can be disabled. */ }
-    document.cookie = `${localeCookie}=${next}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+    try { document.cookie = `${localeCookie}=${next}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`; } catch { /* Session-only preference remains available. */ }
   }, []);
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -28,6 +28,12 @@ export function LanguageProvider({ initialLocale, children }: { initialLocale: L
     description?.setAttribute('content', locale === 'kk' ? 'Halyk-тегі мансап жолыңыз.' : 'Карьерный маршрут в Halyk.');
   }, [locale]);
   useEffect(() => {
+    try {
+      if (!document.cookie.split(';').some(cookie => cookie.trim().startsWith(`${localeCookie}=`))) {
+        const saved = localStorage.getItem(localeCookie);
+        if (isLocale(saved)) updateLocale(saved);
+      }
+    } catch { /* Private browsing may disable persistence. */ }
     const sync = (event: StorageEvent) => { if (event.key === localeCookie && isLocale(event.newValue)) updateLocale(event.newValue); };
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);

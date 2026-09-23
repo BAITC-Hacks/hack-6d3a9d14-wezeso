@@ -1,0 +1,72 @@
+/* Shared responsive rules follow the desktop themes so their fixed dimensions
+   cannot override the mobile layout. Components adapt to workspace width. */
+.workspace, main#main, .login-form, .login-form form { min-width: 0; }
+.app-shell :is(h1, h2, h3, p, .btn), .modal { overflow-wrap: anywhere; }
+.table-wrap { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.app-shell [role=tablist] { max-width: 100%; overflow-x: auto; }
+.app-shell [role=tab] { flex-shrink: 0; }
+.modal { max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+.modal :is(form, fieldset, .modal-content) { min-width: 0; }
+.choice-control { min-width: 0; max-width: 100%; }
+.choice-control > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+@container (max-width: 760px) {
+  .app-shell .topbar { height: auto; min-height: 64px; flex-wrap: wrap; gap: 8px 16px; padding-block: 10px; }
+  .app-shell .topbar > div { flex-wrap: wrap; gap: 8px; min-width: 0; }
+  .topbar-character { flex-wrap: wrap; min-width: 0; }
+  .app-shell .refresh-indicator:empty { display: none; }
+  .app-shell .section-heading { flex-wrap: wrap; }
+  .app-shell .page-heading > .btn { max-width: 100%; }
+  .access-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 720px) {
+  html { scrollbar-gutter: auto; }
+  .app-shell .sidebar, .app-shell .workspace { width: 100%; min-width: 0; }
+  .app-shell .sidebar .brand-logo { opacity: 1; }
+  .app-shell .sidebar nav { display: flex; scroll-padding-inline: 16px; overscroll-behavior-x: contain; }
+  .app-shell .sidebar nav a { min-height: 44px; }
+  .app-shell .sidebar .brand-caption { white-space: nowrap; }
+  .app-shell .sidebar .identity .btn { min-width: 44px; min-height: 44px; }
+  .app-shell .sidebar .side-bottom { top: 10px; right: max(10px, env(safe-area-inset-right)); }
+  .app-shell .topbar { height: auto; min-height: 64px; gap: 8px; padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left)); }
+  .app-shell .topbar-character { flex-basis: 100%; }
+  .app-shell .topbar > div { width: 100%; justify-content: space-between; }
+  .app-shell main#main { padding: 22px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  .app-shell .btn, .modal .btn, .login-form .btn { min-height: 44px; height: auto; max-width: 100%; white-space: normal; }
+  .app-shell .btn > svg, .modal .btn > svg { flex-shrink: 0; }
+  .language-switcher button { min-height: 44px; }
+  .app-shell [role=tab], .modal [role=tab] { min-height: 44px; }
+  /* 16px prevents automatic zoom when focusing text fields on iOS. */
+  :is(.app-shell, .modal, .login-form) :is(input, textarea, select, [role=combobox]) { font-size: 16px !important; max-width: 100%; }
+  .app-shell .notice { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); max-width: none; }
+  .notice > span, .error > div { min-width: 0; overflow-wrap: anywhere; }
+  .app-shell .error, .refresh-error { flex-wrap: wrap; overflow-wrap: anywhere; }
+  .app-shell .request-detail .steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell .request-quick-actions .btn { flex: 1 1 140px; }
+  .app-shell .toolbar, .app-shell .filter-summary { min-width: 0; flex-wrap: wrap; }
+  .app-shell .toolbar > * { max-width: 100%; }
+  .login-page { min-height: 100dvh; }
+  .login-form { padding: 24px max(20px, env(safe-area-inset-right)) 32px max(20px, env(safe-area-inset-left)); flex-direction: column; gap: 24px; }
+  .login-language { position: static; align-self: flex-end; }
+  .role-switch [role=tablist] { height: auto; flex-wrap: wrap; }
+  .role-switch [role=tab] { min-height: 44px; white-space: normal; }
+  .modal { padding: 20px 16px; }
+  .modal-actions { flex-wrap: wrap; gap: 10px; }
+  .modal-actions > .btn { flex: 1 1 150px; }
+  .employee-dialog { padding: 0; }
+  .employee-dialog-header { align-items: flex-start; }
+  .employee-dialog .employee-filters { flex-wrap: wrap; }
+  .employee-dialog .employee-search { width: 100%; }
+  .employee-dialog .employee-skill-row { flex-wrap: wrap; gap: 6px 12px; }
+  .employee-dialog .employee-skill-level { margin-left: auto; }
+}
+
+@media (max-width: 380px) {
+  .app-shell .sidebar .brand { gap: 8px; padding-left: 16px; }
+  .app-shell .sidebar .brand-caption { padding-left: 8px; font-size: 12px; }
+  .app-shell .request-summary { padding: 16px; }
+  .app-shell .request-detail, .app-shell .request-quick-actions { padding-inline: 16px; }
+  .app-shell .request-summary .app-badge { white-space: normal; }
+  .app-shell .request-summary .app-badge-label { white-space: normal; }
+}

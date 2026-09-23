@@ -1,4 +1,5 @@
 .panel { min-width: 0; }
+.monthNav, .monthControls, .agendaHeading { min-width: 0; }
 .intro, .toolbar, .monthNav, .monthControls, .agendaHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .intro { margin-bottom: 20px; flex-wrap: wrap; }
 .intro p, .note, .owner, .count { color: var(--muted); font-size: var(--type-body); line-height: 1.7; }
@@ -52,8 +53,15 @@
 .exportLinks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
 .exportLinks a { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: var(--type-body); font-weight: 600; }
 .note + .note { margin-top: 10px; }
-@media (max-width: 1150px) { .layout { grid-template-columns: minmax(0, 1fr); } .agendaList { max-height: 510px; } .day { min-height: 105px; } }
-@media (max-width: 600px) {
+@container (max-width: 1150px) { .layout { grid-template-columns: minmax(0, 1fr); } .agendaList { max-height: 510px; } .day { min-height: 105px; } }
+@container (max-width: 600px) {
+  .monthNav { gap: 4px; }
+  .monthNav h2 { min-width: 0; flex: 1; font-size: 16px; }
+  .monthControls input { min-width: 0; flex: 1; }
+  .agendaHeading { flex-wrap: wrap; }
+  .additional section { padding: 18px; min-width: 0; }
+  .entryActions > button { flex: 1 1 130px; }
+  .exportLinks a { overflow-wrap: anywhere; padding-inline: 12px; }
   .toolbar { align-items: flex-start; flex-direction: column; }
   .monthNav { width: 100%; }
   .monthControls { width: 100%; flex-wrap: wrap; }

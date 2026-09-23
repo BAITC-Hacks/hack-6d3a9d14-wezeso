@@ -12,7 +12,7 @@ if (existsSync('.env')) {
   }
 }
 const command = process.argv[2];
-if (!['export', 'import'].includes(command)) throw new Error('Use npm run db:export or npm run db:import');
+if (!['export', 'import', 'migrate', 'verify'].includes(command)) throw new Error('Use npm run db:export, db:import, db:migrate or db:verify');
 const win = process.platform === 'win32';
 const bundled = resolve('.tools/go/bin', win ? 'go.exe' : 'go');
 const go = existsSync(bundled) ? bundled : 'go';
@@ -22,5 +22,8 @@ mkdirSync(resolve('.tools'), { recursive: true });
 const binary = resolve('.tools', win ? 'careerquest-db.exe' : 'careerquest-db');
 const build = spawnSync(go, ['build', '-o', binary, '.'], { cwd: resolve('backend'), stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
-const result = spawnSync(binary, [`--${command}-sql`, resolve(process.env.DATA_DIR || 'data', 'supabase-migration.sql'), ...process.argv.slice(3)], { stdio: 'inherit' });
+const args = command === 'verify' ? ['--verify-db']
+  : command === 'migrate' ? ['--import-sql', resolve(root, 'supabase/upgrade.sql')]
+  : [`--${command}-sql`, resolve(process.env.DATA_DIR || 'data', 'supabase-migration.sql')];
+const result = spawnSync(binary, [...args, ...process.argv.slice(3)], { stdio: 'inherit' });
 process.exitCode = result.status ?? 1;

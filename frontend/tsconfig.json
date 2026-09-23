@@ -45,7 +45,11 @@
     ".next-i18n-build/types/**/*.ts",
     ".next-i18n-build/dev/types/**/*.ts",
     ".next-i18n-preview/types/**/*.ts",
-    ".next-i18n-preview/dev/types/**/*.ts"
+    ".next-i18n-preview/dev/types/**/*.ts",
+    ".next-mobile/types/**/*.ts",
+    ".next-mobile/dev/types/**/*.ts",
+    ".next-agent-style-preview/types/**/*.ts",
+    ".next-agent-style-preview/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

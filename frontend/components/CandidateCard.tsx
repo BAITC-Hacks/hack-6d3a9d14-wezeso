@@ -4,12 +4,10 @@ import { useI18n } from '../lib/i18n';
 import { ArrowUpRight, CaretDown } from '@phosphor-icons/react';
 import { Btn } from './UI';
 import { ActivityBadges } from './AppBadge';
-import PixelArt, { activitySymbol, type PixelTone } from './PixelArt';
+import PixelArt, { activitySymbol, activityTone } from './PixelArt';
 import PixelMosaic from './PixelMosaic';
 import { type Candidate } from '../lib/types';
 import styles from './CandidateCard.module.css';
-
-const tones: Record<string, PixelTone> = { course: 'blue', workshop: 'green', mentoring: 'coral', meetup: 'coral', certification: 'blue', compliance: 'green', onboarding: 'green' };
 
 export default function CandidateCard({ c, onChoose, onDecline }: {
   c: Candidate;
@@ -19,7 +17,7 @@ export default function CandidateCard({ c, onChoose, onDecline }: {
  const { t, date, number, languageTag } = useI18n();
 
   const { event, blocked } = c;
-  const tone = tones[event.type] || 'green';
+  const tone = activityTone(event.type);
   return <article className={`${styles.card} ${blocked ? styles.blocked : ''}`} aria-labelledby={`activity-${event.event_id}`}>
     <div className={styles.body}>
       <h3 className={styles.title} id={`activity-${event.event_id}`}>{t(event.title)}</h3>

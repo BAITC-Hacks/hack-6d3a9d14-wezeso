@@ -60,6 +60,12 @@ const colors: Record<PixelTone, Record<string, string>> = {
   blue: { '1': '#214d9e', '2': '#6b9fea', '3': '#c7e1ff' },
 };
 
+const activityTones: Record<string, PixelTone> = { course: 'blue', workshop: 'green', mentoring: 'coral', meetup: 'coral', certification: 'blue', compliance: 'green', onboarding: 'green' };
+
+export function activityTone(type: string): PixelTone {
+  return activityTones[type] || 'green';
+}
+
 export function activitySymbol(type: string, title: string): PixelKind {
   if (/speaking|presentation/i.test(title)) return 'microphone';
   if (/security|secure|compliance/i.test(title)) return 'shield';

@@ -76,7 +76,8 @@ export function translate(locale: Locale, source: string | null | undefined, par
 }
 
 export function formatNumber(locale: Locale, value: number, options?: Intl.NumberFormatOptions) {
-  return new Intl.NumberFormat(localeTag[locale], options).format(value);
+  // Both locales use comma decimals and space grouping; ru-KZ is also available in small-ICU WebViews.
+  return new Intl.NumberFormat(locale === 'kk' ? 'ru-KZ' : localeTag[locale], options).format(value);
 }
 
 export function formatDate(locale: Locale, value: string | undefined, options?: Intl.DateTimeFormatOptions) {
@@ -85,10 +86,40 @@ export function formatDate(locale: Locale, value: string | undefined, options?: 
   const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
   const parsed = new Date(dateOnly ? `${value}T12:00:00Z` : value);
   if (Number.isNaN(parsed.getTime()) || (dateOnly && parsed.toISOString().slice(0, 10) !== value)) return translate(locale, 'Дата не указана');
-  return new Intl.DateTimeFormat(localeTag[locale], {
+  const settings: Intl.DateTimeFormatOptions = {
     ...(options ?? { day: 'numeric', month: 'short', year: 'numeric' }),
     ...(dateOnly ? { timeZone: 'UTC' } : {}),
-  }).format(parsed);
+  };
+  if (locale === 'kk') return formatKazakhDate(parsed, settings);
+  return new Intl.DateTimeFormat(localeTag[locale], settings).format(parsed);
+}
+
+const kazakhMonths = ['қаңтар', 'ақпан', 'наурыз', 'сәуір', 'мамыр', 'маусым', 'шілде', 'тамыз', 'қыркүйек', 'қазан', 'қараша', 'желтоқсан'];
+const kazakhShortMonths = ['қаң.', 'ақп.', 'нау.', 'сәу.', 'мам.', 'мау.', 'шіл.', 'там.', 'қыр.', 'қаз.', 'қар.', 'жел.'];
+const kazakhWeekdays = ['жексенбі', 'дүйсенбі', 'сейсенбі', 'сәрсенбі', 'бейсенбі', 'жұма', 'сенбі'];
+
+// Some desktop WebViews ship incomplete Kazakh ICU data and render months as "M10".
+// Use explicit Kazakh names, while Intl still handles the viewer's time zone.
+function formatKazakhDate(value: Date, options: Intl.DateTimeFormatOptions) {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: options.timeZone, year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' }).formatToParts(value);
+  const part = (name: Intl.DateTimeFormatPartTypes) => parts.find(p => p.type === name)?.value || '';
+  const day = options.day === '2-digit' ? part('day').padStart(2, '0') : part('day');
+  const year = options.year === '2-digit' ? part('year').slice(-2) : part('year');
+  const monthIndex = Number(part('month')) - 1;
+  const numericMonth = options.month === 'numeric' || options.month === '2-digit';
+  let result = numericMonth
+    ? [options.day && day, options.month === '2-digit' ? part('month').padStart(2, '0') : part('month'), options.year && year].filter(Boolean).join('.')
+    : [options.year && `${year} ж.`, options.day && day, options.month && (options.month === 'short' ? kazakhShortMonths[monthIndex] : kazakhMonths[monthIndex])].filter(Boolean).join(' ');
+  if (options.weekday) {
+    const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(part('weekday'));
+    const label = options.weekday === 'long' ? kazakhWeekdays[weekday] : ['жс', 'дс', 'сс', 'ср', 'бс', 'жм', 'сб'][weekday];
+    result = result ? `${label}, ${result}` : label;
+  }
+  if (options.hour || options.minute || options.second) {
+    const time = new Intl.DateTimeFormat('ru-KZ', { timeZone: options.timeZone, hour: options.hour, minute: options.minute, second: options.second, hour12: false }).format(value);
+    result = result ? `${result}, ${time}` : time;
+  }
+  return result;
 }
 
 const nouns = {

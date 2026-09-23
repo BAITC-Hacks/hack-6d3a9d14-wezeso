@@ -63,7 +63,7 @@ function AuditEntry({ entry, data, title }: { entry: Audit; data: Workspace; tit
   return <details className={styles.entry}>
     <summary className={styles.summary}>
       <time className={styles.time} dateTime={timestamp ? entry.at : undefined}>
-        {timestamp ? timestamp.toLocaleTimeString(languageTag, { hour: '2-digit', minute: '2-digit' }) : ''}
+        {timestamp ? timestamp.toLocaleTimeString(languageTag, { hour: '2-digit', minute: '2-digit', hour12: false }) : ''}
       </time>
       <span className={styles.content}>
         <strong className={styles.title}>{t(heading)}</strong>
@@ -86,7 +86,7 @@ function AuditEntry({ entry, data, title }: { entry: Audit; data: Workspace; tit
       </div>}
       <dl className={styles.metadata}>
         <div><dt>{t("Автор")}</dt><dd>{t(actorRole)} · {entry.actor}</dd></div>
-        <div><dt>{t("Время")}</dt><dd>{timestamp ? timestamp.toLocaleString(languageTag) : entry.at}</dd></div>
+        <div><dt>{t("Время")}</dt><dd>{timestamp ? date(entry.at,{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : entry.at}</dd></div>
         {entry.entity_id && <div><dt>{t("Объект")}</dt><dd>{entry.entity_id}</dd></div>}
         <div><dt>{t("Запись")}</dt><dd>{entry.id}</dd></div>
         {!actions[entry.action] && <div><dt>{t("Действие")}</dt><dd>{entry.action}</dd></div>}
@@ -115,7 +115,7 @@ export default function HistoryPanel({ data, onCatalog, onRequests }: {
   const newestFirst = [...data.audit].reverse().sort((a, b) =>
     (auditDate(b.at)?.getTime() || 0) - (auditDate(a.at)?.getTime() || 0));
   for (const entry of newestFirst) {
-    const day = auditDate(entry.at)?.toLocaleDateString(languageTag, { day: 'numeric', month: 'long', year: 'numeric' }) || t("Дата не указана");
+    const day = (auditDate(entry.at) ? date(entry.at, { day: 'numeric', month: 'long', year: 'numeric' }) : '') || t("Дата не указана");
     const entries = groups.get(day) || [];
     entries.push(entry);
     groups.set(day, entries);

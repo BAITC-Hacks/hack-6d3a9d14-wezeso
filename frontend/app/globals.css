@@ -199,6 +199,12 @@ input[type=file]::file-selector-button{margin-right:12px;border:0;border-radius:
 .character-quest>.status{margin-top:2px}
 
 /* Shared controls and portalled dialogs use the same scale as the workspace. */
+/* Keep Kumo interactions and focus rings, with flat fills instead of bevels. */
+.btn { font-family: var(--font-sans); --tw-shadow: 0 0 #0000; }
+.btn.primary > span[aria-hidden=true] { background: var(--color-kumo-brand); box-shadow: none; }
+.btn.primary:hover:not(:disabled) > span[aria-hidden=true] { background: var(--brand-dark); }
+.btn.destructive > span[aria-hidden=true] { background: var(--color-kumo-danger); box-shadow: none; }
+.btn.destructive:hover:not(:disabled) > span[aria-hidden=true] { background: color-mix(in srgb, var(--color-kumo-danger), black 10%); }
 [data-kumo-component=Button], [role=tab], .choice-control, label {
   font-size: var(--type-body);
 }
@@ -226,3 +232,6 @@ input, textarea, [role=combobox] { font-size: var(--type-body); }
 .login-language { position: absolute; top: 24px; right: 24px; }
 html[lang="kk"] .nav-label { overflow-wrap: anywhere; }
 @media (max-width: 760px) { .topbar { flex-wrap: wrap; height: auto; min-height: 64px; gap: 8px; padding-block: 10px; } .topbar > div { flex-wrap: wrap; gap: 8px; } .topbar .demo-label { display: none; } .login-language { top: 16px; right: 16px; } }
+/* A single system face keeps all Kazakh letters consistent where Manrope lacks glyphs. */
+html[lang="kk"] { --font-sans: 'Segoe UI', Arial, system-ui, sans-serif; }
+html[lang="kk"] body { font-family: var(--font-sans); }

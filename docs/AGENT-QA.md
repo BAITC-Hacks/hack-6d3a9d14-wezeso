@@ -9,6 +9,7 @@
 - Privacy: colleague, manager and HR cannot retrieve an employee's private plan or files. External requests require configured server permission. Model context is checked for names, employee IDs, credentials and raw profile identifiers.
 - Browser: logged in with an isolated synthetic dataset at localhost:3003. The home page displayed a recommendation before any prompt was entered. Opened the automatically created plan, inspected its evidence and files, confirmed it and saw three real pending-manager requests with confirmed progress unchanged.
 - A localization callback collision found in the browser was fixed without removing the concurrent localization work.
-- Mobile viewport verification was interrupted by the browser debugger. Responsive styles are present; this turn does not claim a completed mobile browser check.
+- Design follow-up: checked the agent screen and home recommendation at desktop width, and the expanded form, downloads, actions and approval dialog at 390px and 320px. Fixed an intrinsic grid width that let inputs exceed the panel. Browser measurements confirmed Manrope on content and buttons, and no visible agent content outside the narrow viewport.
+- Agent surfaces now use the shared type scale and colors, compact borders, divided step rows and grouped files. Shared Kumo buttons use flat fills while retaining their focus rings.
 - Live Gemini remains unverified because GEMINI_API_KEY is absent. The running preview honestly used the calculated fallback. Add the key to the ignored server `.env` and restart for live evaluation.
 - Final combined-code checks: production Next.js build passed in an isolated output directory; full Go suite with PostgreSQL passed in 37.353 seconds; `go vet` passed.

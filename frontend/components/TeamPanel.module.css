@@ -102,3 +102,17 @@
   .filters { grid-template-columns: 1fr; }
   .skillRow { gap: 8px; }
 }
+
+/* Keep all employee details visible without horizontal table scrolling. */
+@container (max-width: 600px) {
+  .roster { overflow: visible; border: 0; background: transparent; }
+  .roster table, .roster tbody { display: block; width: 100%; min-width: 0; }
+  .roster thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .roster tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: white; }
+  .roster tbody td { display: block; min-width: 0; padding: 8px 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .roster tbody td:first-child, .roster tbody td:last-child { grid-column: 1 / -1; }
+  .roster tbody td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; }
+  .roster tbody td:nth-child(2) { padding-right: 12px; }
+  .roster tbody td:last-child > button { width: 100%; justify-content: space-between; }
+  .roster :global(.roster-person) { align-items: flex-start; }
+}
